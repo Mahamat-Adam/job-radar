@@ -43,18 +43,18 @@ const PROBE = args.includes('--probe')
 const FROM_CACHE = args.includes('--from-cache')
 
 /**
- * Aggregator listings are dropped on age, because a feed gives no signal that
- * a role is still open and a two-month-old copy usually is not.
+ * Nothing older than three months, whatever the source.
  *
- * Listings read straight from a company's own board are governed by presence
- * instead: if the role is on their careers page today it is open, however long
- * ago it was first published. Companies leave some roles open for a very long
- * time, and deleting those would throw away the best listings in the index.
- * The very old ones are still capped, since a permanently-open requisition is
- * rarely a real opportunity.
+ * Listings from a company's own board are still verified as live every day, so
+ * an old one is not necessarily filled. But a role that has sat open for many
+ * months is rarely an urgent hire, and it crowds out fresher postings. Three
+ * months is the point past which a listing stops being worth an application.
+ *
+ * Feeds are cut sooner still: they carry no signal that a role is even open,
+ * so an unverifiable six-week-old copy is mostly noise.
  */
 const MAX_AGE_FEED = 45
-const MAX_AGE_DIRECT = 400
+const MAX_AGE_DIRECT = 90
 
 const log = (m) => console.log(m)
 const now = new Date()

@@ -74,9 +74,10 @@ with an `on:` flag:
 }
 ```
 
-Currently on: **frontend/full-stack web**, **solutions and technical
-consulting**.
-Currently off: **automation**, **AI and LLM**, **data and analytics**.
+All five groups are currently **on**: frontend/full-stack web, solutions and
+technical consulting, automation and bots, AI and LLM, and data and analytics.
+Switch one to `on: false` if a category is producing more noise than it is
+worth.
 
 To change one:
 
@@ -87,6 +88,19 @@ To change one:
 
 That push triggers a rebuild automatically. The new categories appear after
 the next run finishes.
+
+### Change how old a job can be
+
+The file is `pipeline/index.mjs`, near the top:
+
+```js
+const MAX_AGE_FEED = 45     // listings from job boards
+const MAX_AGE_DIRECT = 90   // listings from company careers pages
+```
+
+Both are in days. Nothing older than these ever reaches the site, even if the
+role is still open. Raise `MAX_AGE_DIRECT` if the list feels thin; lower it if
+you keep seeing postings that feel stale.
 
 ### Add a company whose jobs you want
 

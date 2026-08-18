@@ -1,3 +1,7 @@
+/* Self-hosted faces. Must come before the Tailwind layers so the
+   @font-face rules are registered by the time utilities apply them. */
+@import './fonts.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

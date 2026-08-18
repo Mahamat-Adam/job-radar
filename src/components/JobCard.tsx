@@ -102,7 +102,7 @@ function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide 
             </div>
 
             {isNew && (
-              <span className="shrink-0 rounded-full bg-beam/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky">
+              <span className="shrink-0 rounded-full bg-beam/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky">
                 New
               </span>
             )}

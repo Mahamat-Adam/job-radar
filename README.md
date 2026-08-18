@@ -62,6 +62,8 @@ Two kinds of source, and the difference matters:
 
 **Public job feeds.** Open job boards that publish a free, public feed. Wider reach, but no way to confirm a role is still open, so these are aged out after 45 days.
 
+**Nothing older than three months appears, from either source.** A role that has sat open since spring is rarely an urgent hire, and it crowds out fresher postings. So even a listing that is still verifiably live is dropped once the original posting passes 90 days.
+
 Everything is deduplicated across sources — the same role advertised in six places is one entry, not six. Listings without a working apply link, or too thin to judge, are dropped.
 
 **What this is not:** it is not every job in the world. Free, openly published job data skews heavily toward technology and toward remote work. I'd rather show you a few thousand listings that are real than a hundred thousand that are mostly ghosts. If a role isn't here, it doesn't mean it doesn't exist.
@@ -73,6 +75,7 @@ Everything is deduplicated across sources — the same role advertised in six pl
 - Your CV is read in your browser and never transmitted. There is no server to transmit it to.
 - Saves, likes and preferences live in your browser's local storage. Clearing site data clears them.
 - No accounts, no analytics, no tracking, no cookies, no adverts.
+- **No third-party requests at all.** The fonts are served from this site rather than from Google, so no other company sees your IP address when you open the page. The only thing the site fetches is its own job list.
 - Because there's no account, your saved jobs don't follow you to another device.
 
 ---

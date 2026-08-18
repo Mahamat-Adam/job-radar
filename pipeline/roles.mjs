@@ -39,7 +39,7 @@ export const ROLE_GROUPS = [
   },
   {
     id: 'automation',
-    on: false,
+    on: true,
     label: 'Automation, bots and scraping',
     queries: ['automation engineer', 'rpa developer', 'web scraping engineer'],
     match: [
@@ -50,7 +50,7 @@ export const ROLE_GROUPS = [
   },
   {
     id: 'ai',
-    on: false,
+    on: true,
     label: 'AI and LLM engineering',
     queries: ['ai engineer', 'llm engineer', 'prompt engineer'],
     match: [
@@ -62,7 +62,7 @@ export const ROLE_GROUPS = [
   },
   {
     id: 'data',
-    on: false,
+    on: true,
     label: 'Data and analytics',
     queries: ['data analyst', 'business intelligence developer'],
     match: [

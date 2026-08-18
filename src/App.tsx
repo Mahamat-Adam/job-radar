@@ -9,6 +9,7 @@ import {
   Layers,
   Lock,
   RefreshCw,
+  Search,
   Sparkles,
 } from 'lucide-react'
 import Globe from '@/three/Globe'
@@ -398,7 +399,7 @@ function Header({
               <Icon size={14} />
               {label}
               {id === 'saved' && savedCount > 0 && (
-                <span className="ml-0.5 rounded-full bg-amber/25 px-1.5 text-[10px] font-bold text-amber">
+                <span className="ml-0.5 rounded-full bg-amber/25 px-1.5 text-[10px] font-semibold text-amber">
                   {savedCount}
                 </span>
               )}
@@ -568,7 +569,72 @@ function Discover({
           </p>
         )}
       </section>
+
+      <HowItWorks />
     </>
+  )
+}
+
+/**
+ * Written for someone who has never used the site and does not care how it is
+ * built. Each panel answers a question a first-time visitor actually asks,
+ * including the two that look like bugs until they are explained.
+ */
+function HowItWorks() {
+  const panels = [
+    {
+      icon: Search,
+      title: 'Where the jobs come from',
+      body: 'Most of them are read straight off company careers pages — the same page you would land on if you applied directly. The rest come from open job boards that publish their listings freely. Nobody pays to appear here, so nothing is promoted.',
+    },
+    {
+      icon: FileCheck2,
+      title: 'How your CV is used',
+      body: 'Your CV is opened and read by this page, in your browser, on your device. It is never sent anywhere, because there is nowhere to send it — this site has no server behind it. Close the tab and it is gone.',
+    },
+    {
+      icon: Sparkles,
+      title: 'How matching works',
+      body: 'It looks for skills your CV and the job have in common, weighting unusual ones more heavily, then checks how close the job title is to work you have done, and whether the seniority actually fits. Rare skills count for more than common ones.',
+    },
+    {
+      icon: Layers,
+      title: 'Why your level matters',
+      body: 'A job several grades above you is not a stretch, it is a wasted evening. Roles one step up still appear, because those are worth trying. Roles far above are pushed down rather than filling the page.',
+    },
+    {
+      icon: RefreshCw,
+      title: '"Posted 2 months ago · still listed today"',
+      body: 'These mean different things. The first is when the employer published it. The second is that the role was still on their careers page at the last check. Companies leave good roles open for a long time, so an older posting can be perfectly live.',
+    },
+    {
+      icon: Heart,
+      title: 'Saving and hearting',
+      body: 'The bookmark keeps a job for later. The heart teaches the ranking what you actually want, and starts having an effect after a handful of them. Both are stored on this device only, so they will not follow you to another phone.',
+    },
+  ]
+
+  return (
+    <section className="pt-16">
+      <h2 className="font-display text-xl font-semibold text-chalk">How this works</h2>
+      <p className="mt-1 text-sm text-mist">
+        No accounts, no adverts, nothing sold on. Here is the whole thing in plain terms.
+      </p>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {panels.map(({ icon: Icon, title, body }, i) => (
+          <Reveal key={title} delay={Math.min(i, 5) * 0.05} className="min-w-0">
+            <div className="panel h-full p-4">
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-beam/15 text-sky">
+                <Icon size={15} />
+              </span>
+              <h3 className="mt-3 text-sm font-semibold text-chalk">{title}</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-mist">{body}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
   )
 }
 
