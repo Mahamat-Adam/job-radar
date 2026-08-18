@@ -101,6 +101,8 @@ To widen or narrow what gets collected, edit `pipeline/roles.mjs` — each role 
 
 The published site rebuilds itself daily through a scheduled workflow that collects fresh listings and deploys them. The job data is never committed, so the repository doesn't grow over time.
 
+**[MAINTENANCE.md](MAINTENANCE.md)** covers running it entirely from github.com with no development setup — restarting the schedule if GitHub puts it to sleep, triggering a refresh by hand, changing which kinds of jobs get collected, and adding companies.
+
 ---
 
 ## Honest limitations
