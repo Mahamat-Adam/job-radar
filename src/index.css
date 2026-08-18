@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* The globe claims horizontal drags, so stop them chaining to the
+       browser's swipe-back gesture. */
+    overscroll-behavior-x: none;
+  }
+
+  body {
+    @apply bg-void font-sans text-chalk antialiased;
+    overscroll-behavior-x: none;
+    background-image:
+      radial-gradient(1100px 620px at 78% -8%, rgba(59, 130, 246, 0.16), transparent 62%),
+      radial-gradient(820px 520px at 8% 4%, rgba(56, 217, 232, 0.09), transparent 58%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3 {
+    @apply font-display;
+  }
+
+  ::selection {
+    background: rgba(59, 130, 246, 0.32);
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-sky ring-offset-2 ring-offset-void;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-line/70 bg-abyss/60 backdrop-blur-sm;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line/80 bg-deep/60 px-2.5 py-1
+           text-xs font-medium text-mist transition-colors;
+  }
+
+  .chip-on {
+    @apply border-beam/70 bg-beam/15 text-ice;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+           transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45;
+  }
+
+  .btn-primary {
+    @apply btn bg-beam text-white shadow-[0_6px_24px_-8px_rgba(59,130,246,0.85)]
+           hover:bg-sky active:translate-y-px;
+  }
+
+  .btn-ghost {
+    @apply btn border border-line bg-deep/40 text-mist hover:border-haze hover:text-chalk;
+  }
+
+  .label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-dim;
+  }
+
+  /* A thin, dark scrollbar so long filter columns do not show a bright
+     system bar against the dark panels. */
+  .thin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #1c3a6b transparent;
+  }
+  .thin-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .thin-scroll::-webkit-scrollbar-track { background: transparent; }
+  .thin-scroll::-webkit-scrollbar-thumb {
+    background: #1c3a6b;
+    border-radius: 999px;
+  }
+  .thin-scroll::-webkit-scrollbar-thumb:hover { background: #254e8c; }
+}

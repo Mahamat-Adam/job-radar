@@ -1,0 +1,83 @@
+name: Collect and publish
+
+on:
+  # Early morning UTC, so the index is fresh by the start of the day in most
+  # of the world. GitHub may run scheduled jobs late under load; that is
+  # expected and harmless here.
+  schedule:
+    - cron: '17 5 * * *'
+  push:
+    branches: [main]
+  # Manual trigger, which is also how to bring the schedule back if GitHub
+  # suspends it after a long quiet period on the repository.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two runs publish at once, and let a newer run supersede a queued
+# one rather than piling up.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The job index is never committed to the repository. Instead the
+      # currently published copy is pulled back in before collecting, which
+      # gives the run its history — when each listing was first seen, and which
+      # ones have since come off an employer's board — without a single data
+      # commit ever entering git. The repository therefore never grows.
+      #
+      # On the very first run there is nothing to fetch and the collector
+      # simply starts from empty.
+      - name: Carry forward the published index
+        run: |
+          mkdir -p public/data
+          if curl -fsSL --max-time 60 \
+              "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/data/jobs.json" \
+              -o public/data/jobs.json; then
+            echo "Previous index: $(node -e 'console.log(require("./public/data/jobs.json").jobs.length)') listings"
+          else
+            echo "No published index yet, starting fresh."
+            rm -f public/data/jobs.json
+          fi
+
+      - name: Collect jobs
+        run: npm run collect
+
+      - name: Build
+        run: npm run build
+
+      # enablement turns Pages on for the repository on the first run, so no
+      # manual step is needed in the repository settings.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

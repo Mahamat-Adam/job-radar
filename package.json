@@ -1,0 +1,46 @@
+{
+  "name": "job-radar",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.app.json --noEmit && vite build",
+    "preview": "vite preview",
+    "geo": "node scripts/build-geo.mjs",
+    "collect": "node pipeline/index.mjs",
+    "probe": "node pipeline/index.mjs --probe",
+    "shot": "node scripts/shot.mjs",
+    "reprocess": "node pipeline/index.mjs --from-cache"
+  },
+  "dependencies": {
+    "framer-motion": "^13.1.0",
+    "lucide-react": "^1.32.0",
+    "mammoth": "^1.12.1",
+    "pdfjs-dist": "^4.8.69",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.185.4",
+    "@types/topojson-client": "^3.1.5",
+    "@vitejs/plugin-react": "^6.0.4",
+    "autoprefixer": "^10.5.4",
+    "d3-geo": "^3.1.1",
+    "i18n-iso-countries": "^7.14.0",
+    "oxlint": "^1.75.0",
+    "postcss": "^8.5.26",
+    "puppeteer-core": "^25.8.0",
+    "tailwindcss": "^3.4.17",
+    "topojson-client": "^3.1.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0",
+    "world-atlas": "^2.0.2"
+  },
+  "description": "Match a CV against real job openings worldwide, filter by country and recency, and check that the CV reads cleanly."
+}

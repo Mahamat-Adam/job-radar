@@ -1,0 +1,22 @@
+{
+  "name": "Job Radar",
+  "short_name": "Job Radar",
+  "description": "Match your CV against real job openings worldwide, filter by country and recency, and check that your CV reads cleanly.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#04091A",
+  "theme_color": "#04091A",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

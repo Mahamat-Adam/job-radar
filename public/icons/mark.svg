@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#60A5FA"/>
+      <stop offset="0.55" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.34" cy="0.28" r="0.75">
+      <stop offset="0" stop-color="#BFDBFE" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#1D4ED8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="107.52" fill="#04091A"/>
+
+  <circle cx="256" cy="256" r="193.7408" fill="url(#sky)"/>
+  <circle cx="256" cy="256" r="193.7408" fill="url(#shine)"/>
+
+  <g fill="none" stroke="#04091A" stroke-opacity="0.42" stroke-width="11.264">
+    <ellipse cx="256" cy="256" rx="81.371136" ry="193.7408"/>
+    <line x1="256" y1="62.25919999999999" x2="256" y2="449.74080000000004"/>
+    <line x1="62.25919999999999" y1="256" x2="449.74080000000004" y2="256"/>
+  </g>
+
+  <circle cx="256" cy="256" r="193.7408" fill="none" stroke="#93C5FD" stroke-opacity="0.55" stroke-width="10.137599999999999"/>
+
+  <circle cx="337.371136" cy="170.754048" r="38.748160000000006" fill="#38D9E8" fill-opacity="0.28"/>
+  <circle cx="337.371136" cy="170.754048" r="19.374080000000003" fill="#EAF2FF"/>
+</svg>

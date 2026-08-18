@@ -1,0 +1,11 @@
+# Normalise to LF in the repository. The site is built on Linux in CI, and
+# mixed endings turn every checkout on a different machine into a noisy diff.
+* text=auto eol=lf
+
+# Binary assets must never be touched.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

@@ -1,0 +1,32 @@
+node_modules
+dist
+dist-ssr
+*.local
+
+# The job index is produced fresh by the scheduled workflow and published
+# straight to the site. Keeping it out of git is what stops the repository
+# growing by a few hundred kilobytes every single day.
+public/data/jobs.json
+
+# Screenshots taken while developing.
+shots/
+
+# Editor and OS noise
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Never commit a CV. The app reads them in the browser and this project has no
+# reason to hold one on disk.
+*.pdf
+*.docx
+
+# Raw source responses kept so reprocessing needs no network.
+pipeline/.cache/
