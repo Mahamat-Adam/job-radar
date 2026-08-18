@@ -62,11 +62,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      # enablement turns Pages on for the repository on the first run, so no
-      # manual step is needed in the repository settings.
+      # Pages has to be switched on for the repository once, with its source
+      # set to GitHub Actions. The workflow's own token is not allowed to
+      # create the site — that returns "Resource not accessible by
+      # integration" — so `enablement: true` is not used here. Enable it once
+      # from Settings > Pages, or with:
+      #   gh api -X POST repos/OWNER/REPO/pages -f build_type=workflow
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
