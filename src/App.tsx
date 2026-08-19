@@ -90,7 +90,10 @@ export default function App() {
     [jobs]
   )
 
-  const onSave = useCallback((id: string) => setPrefs((p) => store.toggleSaved(p, id)), [])
+  const onSave = useCallback(
+    (id: string, job?: Job) => setPrefs((p) => store.toggleSaved(p, id, job)),
+    []
+  )
   const onStatus = useCallback(
     (id: string, s: AppStatus) => setPrefs((p) => store.setStatus(p, id, s)),
     []
@@ -173,10 +176,37 @@ export default function App() {
     return dailyPicks(fresh, todayKey(), 6)
   }, [ranked, now])
 
-  const savedItems = useMemo(
-    () => ranked.filter((s) => prefs.saved.includes(s.job.id)),
-    [ranked, prefs.saved]
-  )
+  /**
+   * Saved jobs come from the live index where possible, and from the copy kept
+   * at save time where not.
+   *
+   * Resolving purely against the index used to mean a tracked application
+   * vanished the moment the role came off the employer's board or aged past the
+   * cap — which is exactly when you most need the record. Anything no longer in
+   * the index is still shown, marked as closed.
+   */
+  const savedItems = useMemo(() => {
+    const live = new Map(ranked.map((s) => [s.job.id, s]))
+    const out: { item: Scored; gone: boolean }[] = []
+
+    for (const id of prefs.saved) {
+      const hit = live.get(id)
+      if (hit) {
+        out.push({ item: hit, gone: false })
+        continue
+      }
+      const snap = prefs.applications[id]?.job
+      if (snap) {
+        out.push({
+          item: { job: snap, score: 0, overlap: [], missing: [], reasons: [] },
+          gone: true,
+        })
+      }
+      // A save made before snapshots existed, whose job has since left the
+      // index, has nothing left to show. Nothing to render, nothing to lose.
+    }
+    return out
+  }, [ranked, prefs.saved, prefs.applications])
   const likedItems = useMemo(
     () => ranked.filter((s) => prefs.liked.includes(s.job.id)),
     [ranked, prefs.liked]
@@ -189,7 +219,7 @@ export default function App() {
 
   const hasCv = !!cv
 
-  const renderCard = (item: Scored) => (
+  const renderCard = (item: Scored, gone = false) => (
     <JobCard
       key={item.job.id}
       item={item}
@@ -202,6 +232,7 @@ export default function App() {
       onHide={onHide}
       app={prefs.applications[item.job.id]}
       onStatus={onStatus}
+      gone={gone}
     />
   )
 
@@ -277,7 +308,7 @@ export default function App() {
                   />
                 ) : (
                   <>
-                    <div className="space-y-3">{filtered.slice(0, shown).map(renderCard)}</div>
+                    <div className="space-y-3">{filtered.slice(0, shown).map((it) => renderCard(it))}</div>
 
                     {shown < filtered.length && (
                       <div className="mt-5 flex flex-col items-center gap-2">
@@ -317,13 +348,13 @@ export default function App() {
                 />
               ) : (
                 <>
-                  <Pipeline items={savedItems} apps={prefs.applications} />
+                  <Pipeline items={savedItems.map((s) => s.item)} apps={prefs.applications} />
 
                   {/* Grouped so the things needing action are not buried under
                       the ones already closed. */}
                   {STATUSES.map((s) => {
                     const group = savedItems.filter(
-                      (it) => (prefs.applications[it.job.id]?.status ?? 'saved') === s.value
+                      (it) => (prefs.applications[it.item.job.id]?.status ?? 'saved') === s.value
                     )
                     if (!group.length) return null
                     return (
@@ -333,7 +364,9 @@ export default function App() {
                           {s.label}
                           <span className="font-mono text-[11px] font-normal">{group.length}</span>
                         </p>
-                        <div className="space-y-3">{group.map(renderCard)}</div>
+                        <div className="space-y-3">
+                          {group.map((g) => renderCard(g.item, g.gone))}
+                        </div>
                       </div>
                     )
                   })}
@@ -358,7 +391,7 @@ export default function App() {
                   body="The heart button teaches the ranking what you are actually after."
                 />
               ) : (
-                <div className="mt-4 space-y-3">{likedItems.map(renderCard)}</div>
+                <div className="mt-4 space-y-3">{likedItems.map((it) => renderCard(it))}</div>
               )}
             </div>
 

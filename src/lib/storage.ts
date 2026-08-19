@@ -1,4 +1,4 @@
-import type { AppStatus, Application, Prefs } from './types'
+import type { AppStatus, Application, Job, Prefs } from './types'
 
 /**
  * Everything the app remembers lives in this browser. There is no account and
@@ -67,8 +67,11 @@ export function toggle(list: string[], id: string): string[] {
 /**
  * Bookmarking and un-bookmarking. Removing a job drops its pipeline record
  * too, so a job cannot sit at "interviewing" while not being saved.
+ *
+ * The listing itself is copied in, trimmed of the long description, because the
+ * record has to outlive the job leaving the index.
  */
-export function toggleSaved(prefs: Prefs, id: string): Prefs {
+export function toggleSaved(prefs: Prefs, id: string, job?: Job): Prefs {
   if (prefs.saved.includes(id)) {
     const applications = { ...prefs.applications }
     delete applications[id]
@@ -77,8 +80,16 @@ export function toggleSaved(prefs: Prefs, id: string): Prefs {
   return {
     ...prefs,
     saved: [...prefs.saved, id],
-    applications: { ...prefs.applications, [id]: { status: 'saved', at: new Date().toISOString() } },
+    applications: {
+      ...prefs.applications,
+      [id]: { status: 'saved', at: new Date().toISOString(), job: job ? snapshot(job) : undefined },
+    },
   }
+}
+
+/** Enough to render a card, without carrying a few kilobytes of prose per row. */
+function snapshot(job: Job): Job {
+  return { ...job, summary: job.summary.slice(0, 240) }
 }
 
 export function setStatus(prefs: Prefs, id: string, status: AppStatus): Prefs {
@@ -91,6 +102,7 @@ export function setStatus(prefs: Prefs, id: string, status: AppStatus): Prefs {
     // reply is overdue — so later stages do not overwrite it.
     appliedAt: status === 'applied' ? (current?.appliedAt ?? now) : current?.appliedAt,
     note: current?.note,
+    job: current?.job,
   }
   return {
     ...prefs,

@@ -106,6 +106,17 @@ export type Application = {
   /** ISO date the application went in, kept across later status changes. */
   appliedAt?: string
   note?: string
+  /**
+   * The listing as it was when you saved it.
+   *
+   * Without this the pipeline is a list of ids resolved against the live index,
+   * and jobs leave that index constantly by design — removed when they come off
+   * the employer's board, or dropped once the posting passes 90 days. That made
+   * an application record disappear at exactly the moment it mattered most: the
+   * role was filled and you needed to remember you had applied. Keeping a copy
+   * also makes the backup file self-contained rather than a list of pointers.
+   */
+  job?: Job
 }
 
 export type Prefs = {

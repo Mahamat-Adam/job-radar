@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { Bookmark, Heart, ExternalLink, EyeOff, MapPin, ShieldCheck } from 'lucide-react'
 import type { Scored } from '@/lib/match'
-import type { AppStatus, Application } from '@/lib/types'
+import type { AppStatus, Application, Job } from '@/lib/types'
 import StatusPicker from '@/components/StatusPicker'
 import { agoLabel, salaryLabel } from '@/lib/data'
 import { openExternal } from '@/lib/openExternal'
@@ -14,12 +14,14 @@ type Props = {
   liked: boolean
   hasCv: boolean
   isNew: boolean
-  onSave: (id: string) => void
+  onSave: (id: string, job?: Job) => void
   onLike: (id: string) => void
   onHide: (id: string) => void
   /** Present only when the job is saved; drives the pipeline control. */
   app?: Application
   onStatus?: (id: string, s: AppStatus) => void
+  /** The listing has left the index; shown from the copy kept at save time. */
+  gone?: boolean
 }
 
 const REMOTE_STYLE: Record<string, string> = {
@@ -76,7 +78,7 @@ function MatchRing({ score }: { score: number }) {
   )
 }
 
-function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide, app, onStatus }: Props) {
+function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide, app, onStatus, gone }: Props) {
   const { job, overlap, reasons } = item
   const pay = salaryLabel(job)
   const tone = scoreTone(item.score)
@@ -106,10 +108,19 @@ function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide,
               <p className="mt-0.5 truncate text-sm text-mist">{job.company}</p>
             </div>
 
-            {isNew && (
-              <span className="shrink-0 rounded-full bg-beam/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky">
-                New
+            {gone ? (
+              <span
+                className="shrink-0 rounded-full bg-dim/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-dim"
+                title="This listing has come off the employer's board or aged out. Your record of it is kept."
+              >
+                No longer listed
               </span>
+            ) : (
+              isNew && (
+                <span className="shrink-0 rounded-full bg-beam/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky">
+                  New
+                </span>
+              )
             )}
           </div>
 
@@ -213,7 +224,7 @@ function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide,
 
             <button
               type="button"
-              onClick={() => onSave(job.id)}
+              onClick={() => onSave(job.id, job)}
               aria-pressed={saved}
               title={saved ? 'Remove from saved' : 'Save this job'}
               className={`rounded-lg border p-2 transition-colors ${
