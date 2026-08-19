@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Radar — Handbook</title>
+<style>
+  :root{
+    --void:#04091A; --abyss:#071229; --panel:#0E2144; --line:#1C3A6B; --haze:#254E8C;
+    --beam:#3B82F6; --sky:#60A5FA; --ice:#A5CDFF; --cyan:#38D9E8;
+    --amber:#F6A723; --rose:#FF6392; --mint:#34D399;
+    --chalk:#EAF2FF; --mist:#9FB6D6; --dim:#61789B;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--void); color:var(--chalk);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+    background-image:
+      radial-gradient(900px 500px at 85% -5%, rgba(59,130,246,.14), transparent 60%),
+      radial-gradient(700px 420px at 5% 2%, rgba(56,217,232,.08), transparent 58%);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px 96px}
+  header{padding:56px 0 28px;border-bottom:1px solid rgba(28,58,107,.6)}
+  h1{font-size:2.1rem;line-height:1.15;margin:0 0 10px;letter-spacing:-.02em}
+  h1 span{background:linear-gradient(90deg,var(--sky),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+  h2{font-size:1.3rem;margin:44px 0 12px;padding-top:14px;border-top:1px solid rgba(28,58,107,.5);letter-spacing:-.01em}
+  h3{font-size:1rem;margin:26px 0 8px;color:var(--ice)}
+  p,li{color:var(--mist)}
+  a{color:var(--sky)}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.87em;
+    background:rgba(14,33,68,.9);border:1px solid rgba(28,58,107,.7);
+    padding:.1em .4em;border-radius:5px;color:var(--ice);
+  }
+  pre{
+    background:var(--abyss);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;overflow-x:auto;font-size:.85rem;line-height:1.55;
+  }
+  pre code{background:none;border:none;padding:0;color:var(--ice)}
+  .panel{background:rgba(7,18,41,.6);border:1px solid rgba(28,58,107,.7);border-radius:14px;padding:18px 20px;margin:18px 0}
+  .warn{border-color:rgba(246,167,35,.4);background:rgba(246,167,35,.08)}
+  .warn strong{color:var(--amber)}
+  .good{border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.07)}
+  .good strong{color:var(--mint)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92rem;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid rgba(28,58,107,.5);vertical-align:top}
+  th{color:var(--dim);font-size:.74rem;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+  td:first-child{white-space:nowrap;color:var(--chalk)}
+  .toc{background:rgba(7,18,41,.5);border:1px solid rgba(28,58,107,.6);border-radius:14px;padding:16px 22px;margin:26px 0}
+  .toc ol{margin:6px 0;padding-left:20px}
+  .toc a{text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .lede{font-size:1.05rem;color:var(--mist);max-width:64ch}
+  .pill{display:inline-block;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
+    padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim);margin-right:6px}
+  .step{display:flex;gap:14px;margin:14px 0}
+  .step .n{flex:0 0 26px;height:26px;border-radius:999px;border:1px solid rgba(59,130,246,.5);
+    color:var(--sky);display:grid;place-items:center;font-size:.76rem;font-weight:700;font-family:ui-monospace,monospace}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid rgba(28,58,107,.5);color:var(--dim);font-size:.87rem}
+  @media (max-width:640px){ h1{font-size:1.7rem} .wrap{padding:0 16px 64px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="pill">Handbook</span>
+  <h1>Job Radar<br><span>everything you need to run it</span></h1>
+  <p class="lede">
+    How the site works, how to keep it fed with fresh jobs, and how to change it — all from a
+    browser, with no development setup. Written so it still makes sense in six months.
+  </p>
+  <p style="font-size:.9rem">
+    <strong style="color:var(--chalk)">Site:</strong>
+    <a href="https://mahamat-adam.github.io/job-radar/">mahamat-adam.github.io/job-radar/</a><br>
+    <strong style="color:var(--chalk)">Code:</strong>
+    <a href="https://github.com/Mahamat-Adam/job-radar">github.com/Mahamat-Adam/job-radar</a>
+  </p>
+</header>
+
+<nav class="toc">
+  <strong style="color:var(--chalk)">Contents</strong>
+  <ol>
+    <li><a href="#what">What it does</a></li>
+    <li><a href="#parts">The parts, and how they fit</a></li>
+    <li><a href="#storage">Where your data lives</a></li>
+    <li><a href="#tracker">The application tracker</a></li>
+    <li><a href="#refresh">Keeping the jobs fresh</a></li>
+    <li><a href="#change">Changing what it collects</a></li>
+    <li><a href="#local">Running it on a new laptop</a></li>
+    <li><a href="#wrong">When something looks wrong</a></li>
+    <li><a href="#honest">Limits worth knowing</a></li>
+  </ol>
+</nav>
+
+<h2 id="what">1. What it does</h2>
+<p>
+  You drop in your CV. It is read by JavaScript running on the page, in your own browser, and
+  never uploaded — there is no server behind this site to upload it to. It then ranks real job
+  openings against what it found: your skills, your job titles, your level, and how recently each
+  role was posted.
+</p>
+<p>
+  Everything else — the globe, the filters, the saving, the tracker, the CV check — sits on top of
+  that one idea.
+</p>
+
+<h2 id="parts">2. The parts, and how they fit</h2>
+<p>Four pieces, and it helps to keep them separate in your head.</p>
+
+<table>
+  <tr><th>Part</th><th>What it does</th><th>Where it runs</th></tr>
+  <tr>
+    <td><strong>The collector</strong></td>
+    <td>Fetches jobs from company career pages and public job feeds, filters them, removes duplicates, works out each role's level and country, and writes one JSON file.</td>
+    <td>GitHub's servers, once a day</td>
+  </tr>
+  <tr>
+    <td><strong>The site</strong></td>
+    <td>Reads that JSON file and shows it. Globe, filters, cards, pagination.</td>
+    <td>Your browser</td>
+  </tr>
+  <tr>
+    <td><strong>The matcher</strong></td>
+    <td>Reads your CV, extracts skills and level, scores every job against it.</td>
+    <td>Your browser</td>
+  </tr>
+  <tr>
+    <td><strong>Your data</strong></td>
+    <td>Saves, likes, application statuses.</td>
+    <td>Your browser's local storage</td>
+  </tr>
+</table>
+
+<h3>How a job gets its score</h3>
+<p>Four signals are added together, then two multipliers are applied.</p>
+<pre><code>score = 0.44 × skill overlap      (rare skills count for more)
+      + 0.28 × job title similarity
+      + 0.16 × general word overlap
+      + 0.12 × listing quality
+
+      × level fit        (a multiplier, not a penalty)
+      × freshness</code></pre>
+<p>
+  Level fit is a multiplier on purpose. A role three grades above you is not "slightly worse" — it
+  is unreachable, and adding a penalty would let a strong keyword match drag it back onto page one.
+  Multiplying pushes it down and keeps it down.
+</p>
+
+<h3>How level is worked out</h3>
+<p>In order, stopping at the first thing that matches:</p>
+<ol>
+  <li>Words in the title — intern, junior, graduate, senior, staff, principal, architect, head of.</li>
+  <li>A graduate intake mentioned in the description.</li>
+  <li>A stated year count on a requirement line. Five or more reads as senior, three to four as mid, below that as entry.</li>
+  <li>Duties only a senior does — mentoring juniors, leading a team, owning the roadmap.</li>
+</ol>
+<p>
+  If none of that appears, the role is <em>unlabelled</em>. Those are not treated as neutral: of the
+  roles that do state a level, about two thirds are senior or above, so an unlabelled one is scored
+  as probably above an early-career reader.
+</p>
+
+<h2 id="storage">3. Where your data lives</h2>
+<div class="panel warn">
+  <p style="margin:0">
+    <strong>There is no database.</strong> Saves, likes and application statuses live in your
+    browser's local storage, under one key on this site's address. That means
+    <strong>per browser, per device</strong>. Your laptop and your phone are two separate stores
+    that never see each other, and clearing site data erases them.
+  </p>
+</div>
+
+<h3>Moving it to another device, or backing it up</h3>
+<div class="step"><div class="n">1</div><p><strong>Saved → Move this to another device → Download backup.</strong> You get a JSON file.</p></div>
+<div class="step"><div class="n">2</div><p>Open the site on the other device, go to the same place, and choose <strong>Restore from file</strong>.</p></div>
+<div class="step"><div class="n">3</div><p>Keep that file somewhere safe. It is the only copy of your application history.</p></div>
+
+<p>The file looks like this, and contains a copy of each saved job so it stands on its own:</p>
+<pre><code>{
+  "kind": "jobradar-prefs",
+  "version": 2,
+  "saved": ["a3f2…", "9b81…"],
+  "liked": ["…"],
+  "applications": {
+    "a3f2…": {
+      "status": "applied",
+      "appliedAt": "2026-08-19T…",
+      "job": { "title": "…", "company": "…", "url": "…" }
+    }
+  }
+}</code></pre>
+
+<div class="panel">
+  <p style="margin:0">
+    <strong style="color:var(--chalk)">On iPhone:</strong> add it to your Home Screen rather than
+    just bookmarking it. Safari can clear storage for sites you have not opened in a while, and an
+    installed web app is treated more durably. Open in Safari → Share → Add to Home Screen.
+  </p>
+</div>
+
+<h2 id="tracker">4. The application tracker</h2>
+<p>
+  Bookmark a job and it appears under <strong>Saved</strong> with a status control. Move it along as
+  things happen:
+</p>
+<table>
+  <tr><th>Stage</th><th>Means</th></tr>
+  <tr><td>Saved</td><td>Set aside. Not acted on yet.</td></tr>
+  <tr><td>Applied</td><td>Sent. The date is recorded and kept.</td></tr>
+  <tr><td>Interviewing</td><td>They replied and you are talking.</td></tr>
+  <tr><td>Offer</td><td>Self-explanatory.</td></tr>
+  <tr><td>Closed</td><td>Rejected, withdrawn, or you lost interest.</td></tr>
+</table>
+<p>
+  Two weeks after applying with no movement, the card tells you a follow-up is worth sending. After
+  four, it suggests letting it go. The counts across the top of the Saved page show the whole
+  pipeline at a glance, plus how many applications are sitting unanswered.
+</p>
+
+<div class="panel good">
+  <p style="margin:0">
+    <strong>Jobs that get filled do not erase your record.</strong> When you save a job, a copy of
+    the listing is stored with it. Roles leave the index constantly — removed when they come off the
+    employer's careers page, and dropped once the posting passes 90 days — but your entry stays,
+    marked <em>no longer listed</em>. That is deliberate: the moment a role is filled is exactly when
+    you need to remember you applied.
+  </p>
+</div>
+
+<h3>The heart button is not the bookmark</h3>
+<p>
+  The bookmark keeps a specific job. The heart teaches the ranking what kind of work you want, and
+  starts having an effect after about four of them — deliberately not sooner, because three clicks
+  is noise, not a preference. Hiding a job teaches it the opposite.
+</p>
+
+<h2 id="refresh">5. Keeping the jobs fresh</h2>
+<p>
+  A scheduled job runs at <strong>05:17 UTC daily</strong>. It collects fresh listings and publishes
+  the site with them. The job data is never stored in the repository — it is collected and published
+  in the same run — which is why the repository never grows.
+</p>
+
+<h3>The one thing that will eventually stop it</h3>
+<div class="panel warn">
+  <p>
+    <strong>GitHub switches off scheduled jobs after 60 days of no activity in a repository.</strong>
+    This project commits nothing on its daily run, by design, so if you do not push anything for two
+    months the schedule goes to sleep. GitHub emails you first.
+  </p>
+  <p style="margin-bottom:0">
+    The site does not break — it keeps serving the last data it published, and the footer keeps
+    telling you honestly how old that is.
+  </p>
+</div>
+
+<p><strong>To wake it up again:</strong></p>
+<div class="step"><div class="n">1</div><p>Go to <a href="https://github.com/Mahamat-Adam/job-radar/actions">the Actions tab</a>.</p></div>
+<div class="step"><div class="n">2</div><p>Click <strong>Collect and publish</strong> in the left sidebar.</p></div>
+<div class="step"><div class="n">3</div><p>A banner offers <strong>Enable workflow</strong>. Click it. That resets the 60-day clock.</p></div>
+
+<p><strong>To force a refresh right now:</strong> same page, then <strong>Run workflow</strong> → <strong>Run workflow</strong>. It takes five to ten minutes, most of which is the collector deliberately pausing between requests so it never hammers anyone's servers. Check the site footer afterwards — it should say refreshed today.</p>
+
+<h2 id="change">6. Changing what it collects</h2>
+<p>
+  All of this can be done on github.com. Open a file, click the pencil icon, edit, commit. That push
+  rebuilds and redeploys the site automatically. No clone, no terminal.
+</p>
+
+<h3>Turn a category of jobs on or off</h3>
+<p>File: <code>pipeline/roles.mjs</code>. Each group has a flag:</p>
+<pre><code>{
+  id: 'automation',
+  on: true,        // ← false switches the category off
+  ...
+}</code></pre>
+<p>All five are currently on: web, solutions, automation, AI, and data.</p>
+
+<h3>Change how old a job can be</h3>
+<p>File: <code>pipeline/index.mjs</code>, near the top:</p>
+<pre><code>const MAX_AGE_FEED = 45     // listings from job boards
+const MAX_AGE_DIRECT = 90   // listings from company careers pages</code></pre>
+<p>Both in days. Nothing older reaches the site, even if the role is still open. Raise the second number if the list feels thin.</p>
+
+<h3>Add a company</h3>
+<p>File: <code>pipeline/companies.mjs</code>. The token is the company's name from its careers URL:</p>
+<table>
+  <tr><th>Careers URL looks like</th><th>Add this line</th></tr>
+  <tr><td>job-boards.greenhouse.io/<strong>monzo</strong></td><td><code>{ name: 'Monzo', ats: 'greenhouse', token: 'monzo' },</code></td></tr>
+  <tr><td>jobs.lever.co/<strong>palantir</strong></td><td><code>{ name: 'Palantir', ats: 'lever', token: 'palantir' },</code></td></tr>
+  <tr><td>jobs.ashbyhq.com/<strong>openai</strong></td><td><code>{ name: 'OpenAI', ats: 'ashby', token: 'openai' },</code></td></tr>
+</table>
+<p>
+  There are currently 177 boards. Expect to prune them occasionally — companies change hiring systems
+  and the old address stops answering. A dead board never breaks a run; it is listed under
+  "board(s) did not answer" in the <strong>Collect jobs</strong> step, and you can delete or correct
+  the line.
+</p>
+
+<h2 id="local">7. Running it on a new laptop</h2>
+<p>You only need this if you want to change things quickly or work offline. Requires <a href="https://nodejs.org">Node.js</a>.</p>
+<pre><code>git clone https://github.com/Mahamat-Adam/job-radar.git
+cd job-radar
+npm install
+npm run collect     # fetch jobs (several minutes)
+npm run dev         # http://localhost:5210/job-radar/</code></pre>
+
+<table>
+  <tr><th>Command</th><th>What it does</th></tr>
+  <tr><td><code>npm run collect</code></td><td>Fetch from every source. Slow on purpose.</td></tr>
+  <tr><td><code>npm run reprocess</code></td><td>Re-run filtering and scoring over the <em>last</em> fetch, with no network calls. Use this while tuning.</td></tr>
+  <tr><td><code>npm run probe</code></td><td>Check every source and board without writing anything.</td></tr>
+  <tr><td><code>npm run discover</code></td><td>Given company names, find which hiring system each uses and whether its board answers. Prints lines ready to paste into the companies file.</td></tr>
+  <tr><td><code>npm run geo</code></td><td>Rebuild the globe and country data. Rarely needed.</td></tr>
+  <tr><td><code>npm run fonts</code></td><td>Re-download the self-hosted fonts.</td></tr>
+  <tr><td><code>npm run build</code></td><td>Typecheck, then build.</td></tr>
+</table>
+
+<div class="panel">
+  <p style="margin:0">
+    Nothing is lost by not having a local copy. The repository holds everything except the job list,
+    which is regenerated on every run.
+  </p>
+</div>
+
+<h2 id="wrong">8. When something looks wrong</h2>
+<table>
+  <tr><th>Symptom</th><th>What to do</th></tr>
+  <tr><td>Data looks old</td><td>Check the Actions tab for a failed or sleeping run. The footer tells you the true age.</td></tr>
+  <tr><td>A run failed</td><td>Open it and read the red step. One broken source is skipped, not fatal, so a total failure usually means something structural.</td></tr>
+  <tr><td>The list emptied</td><td>Should not be possible — the collector carries forward the previous index when a source fails. Re-run the workflow by hand.</td></tr>
+  <tr><td>Saved jobs vanished</td><td>Check you are on the same browser and device. Storage does not sync. Restore from a backup file.</td></tr>
+  <tr><td>Site will not load</td><td>Check <a href="https://www.githubstatus.com/">githubstatus.com</a> before assuming it is the project.</td></tr>
+  <tr><td>A job links to a dead page</td><td>The employer removed it between the last collection and your click. It will drop out on the next run.</td></tr>
+</table>
+
+<h2 id="honest">9. Limits worth knowing</h2>
+<ul>
+  <li>
+    <strong>Entry-level roles are scarce.</strong> Around 90 of roughly 1,700 listings are entry or
+    internship level. That is the market, not a gap in the collection — tripling the company list
+    barely moved it. Your realistic pool is entry, intern and mid together, plus some of the
+    unlabelled ones.
+  </li>
+  <li>
+    <strong>Coverage skews to technology and remote work</strong>, because that is what gets published
+    openly and free. Southeast Asia and the Gulf are represented but thin.
+  </li>
+  <li>
+    <strong>Some career pages do not publish a first-posted date</strong>, so "posted" is sometimes the
+    last-updated date instead.
+  </li>
+  <li>
+    <strong>Location parsing is good, not perfect.</strong> An unusual location string can land a job in
+    the wrong country or none at all.
+  </li>
+  <li>
+    <strong>The sponsorship badge is a floor, not the full picture.</strong> It only fires when the
+    posting itself mentions sponsorship or relocation. Silence is not counted either way.
+  </li>
+  <li>
+    <strong>The CV check does not predict whether you will get the job.</strong> It checks whether
+    software can read your file. The widespread claim that these systems auto-reject on a keyword
+    percentage does not reflect how the mainstream ones work.
+  </li>
+  <li>
+    <strong>The site is deliberately not indexed by search engines</strong> and makes no third-party
+    requests at all.
+  </li>
+</ul>
+
+<footer>
+  <p>
+    Job Radar · MIT licensed · your CV never leaves your browser<br>
+    <a href="https://mahamat-adam.github.io/job-radar/">mahamat-adam.github.io/job-radar/</a> ·
+    <a href="https://github.com/Mahamat-Adam/job-radar">source on GitHub</a>
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
