@@ -37,7 +37,22 @@ const SENIORITY_RANK: Record<Seniority, number> = {
  * still gets interviews.
  */
 function seniorityGate(cv: Seniority, job: Seniority): number {
-  if (job === 'unknown') return 0.92
+  /**
+   * A posting that never states a level is not neutral, it is unread. Of the
+   * listings whose level *is* stated, roughly two thirds are senior or above,
+   * so the honest expectation for an unlabelled one is "probably above you"
+   * rather than "probably fine". A flat pass here let senior work sit near the
+   * top of an early-career list purely for having a vague title.
+   *
+   * Scaled by the reader's own level: for someone senior an unlabelled role is
+   * most likely at or below them, so it barely moves.
+   */
+  if (job === 'unknown') {
+    if (cv === 'intern' || cv === 'entry') return 0.72
+    if (cv === 'mid') return 0.88
+    return 0.95
+  }
+
   const gap = SENIORITY_RANK[job] - SENIORITY_RANK[cv]
   if (gap <= -2) return 0.55
   if (gap === -1) return 0.85

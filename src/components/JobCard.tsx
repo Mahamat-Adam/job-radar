@@ -1,6 +1,8 @@
 import { memo } from 'react'
 import { Bookmark, Heart, ExternalLink, EyeOff, MapPin, ShieldCheck } from 'lucide-react'
 import type { Scored } from '@/lib/match'
+import type { AppStatus, Application } from '@/lib/types'
+import StatusPicker from '@/components/StatusPicker'
 import { agoLabel, salaryLabel } from '@/lib/data'
 import { openExternal } from '@/lib/openExternal'
 import { labelOf } from '@/lib/skills'
@@ -15,6 +17,9 @@ type Props = {
   onSave: (id: string) => void
   onLike: (id: string) => void
   onHide: (id: string) => void
+  /** Present only when the job is saved; drives the pipeline control. */
+  app?: Application
+  onStatus?: (id: string, s: AppStatus) => void
 }
 
 const REMOTE_STYLE: Record<string, string> = {
@@ -71,7 +76,7 @@ function MatchRing({ score }: { score: number }) {
   )
 }
 
-function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide }: Props) {
+function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide, app, onStatus }: Props) {
   const { job, overlap, reasons } = item
   const pay = salaryLabel(job)
   const tone = scoreTone(item.score)
@@ -243,6 +248,10 @@ function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide 
               <EyeOff size={14} />
             </button>
           </div>
+
+          {/* Only once a job is saved. Showing a pipeline control on every
+              listing in a thousand-row list would be noise. */}
+          {saved && onStatus && <StatusPicker app={app} onChange={(s) => onStatus(job.id, s)} />}
         </div>
       </div>
     </article>

@@ -93,10 +93,27 @@ export type AtsReport = {
   checks: AtsCheck[]
 }
 
+/**
+ * Where a saved job has got to. `saved` is the resting state — set aside, not
+ * acted on yet. Everything after it is a real step you took.
+ */
+export type AppStatus = 'saved' | 'applied' | 'interviewing' | 'offer' | 'rejected'
+
+export type Application = {
+  status: AppStatus
+  /** ISO date the status last changed. */
+  at: string
+  /** ISO date the application went in, kept across later status changes. */
+  appliedAt?: string
+  note?: string
+}
+
 export type Prefs = {
   saved: string[]
   liked: string[]
   hidden: string[]
+  /** Job id to its place in the pipeline. Every key is also in `saved`. */
+  applications: Record<string, Application>
   /** Learned token weights from likes. Only consulted once there are enough. */
   weights: Record<string, number>
   lastVisit: string | null

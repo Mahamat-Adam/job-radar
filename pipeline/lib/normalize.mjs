@@ -282,6 +282,18 @@ export function toSeniority(title, description) {
     return 'lead'
 
   if (/\b(?:senior|sr\.?|snr|lead)\b/.test(t)) return 'senior'
+
+  /**
+   * "Architect" is a seniority marker even without one attached. Solutions
+   * Architect, Platform Architect and the like are roles for people who have
+   * already done the job for years, and they were the single largest group
+   * slipping through unlabelled. Marked senior rather than lead: these are
+   * usually individual contributors, not people managers.
+   */
+  if (/\barchitect\b/.test(t)) return 'senior'
+
+  /** Palantir-style deployment roles, consistently pitched above entry. */
+  if (/\bforward[- ]deployed\b/.test(t)) return 'mid'
   if (/\b(?:junior|jr\.?|graduate|entry[- ]level|associate|trainee|apprentice|early career)\b/.test(t))
     return 'entry'
   if (/\b(?:ii|iii|3)\b/.test(t)) return 'mid'
@@ -297,12 +309,44 @@ export function toSeniority(title, description) {
   )
     return 'entry'
 
-  const m = d.match(
-    /\b(\d{1,2})\s*\+?\s*(?:-|–|to)?\s*(?:\d{1,2})?\s*years?(?:'|’)?\s+(?:of\s+)?(?:relevant\s+|professional\s+|proven\s+|hands[- ]on\s+)?experience/
-  )
-  if (m) {
-    const years = parseInt(m[1], 10)
-    if (years >= 7) return 'senior'
+  /**
+   * Years of experience.
+   *
+   * The earlier version demanded a fixed set of adjectives between "years of"
+   * and "experience", so it read "5+ years of relevant experience" but missed
+   * "6+ years of full-time experience in data engineering" and "5+ years of
+   * professional, hands-on full-stack development experience". Real postings
+   * write anything they like in that gap. Allowing any run of words, stopping
+   * at sentence punctuation, is what this always should have been.
+   *
+   * Only requirement lines count. Company blurbs love "with over 20 years of
+   * experience, we..." and reading that as a seniority requirement would mark
+   * half the index senior.
+   */
+  const YEARS = /\b(\d{1,2})\s*(?:\+|-|–|to)?\s*(?:\d{1,2})?\s*\+?\s*years?(?:'|’)?\b[^.!?;]{0,70}?\bexperience\b/g
+  const ABOUT_CANDIDATE = /\b(?:you|your|candidate|applicant|require|required|must have|should have|looking for|seeking|ideally|minimum|at least|proficien|expertise in|background in)\b/
+  const ABOUT_COMPANY = /\b(?:we have|our team has|the company has|founded|since \d{4}|we bring|combined)\b/
+
+  const found = []
+  for (const line of d.split(/\n|(?<=[.!?])\s+/)) {
+    YEARS.lastIndex = 0
+    const m = YEARS.exec(line)
+    if (!m) continue
+    // Bullets are requirement lines even without an explicit "you".
+    const isRequirement = /^\s*[-•*]/.test(line) || ABOUT_CANDIDATE.test(line)
+    if (!isRequirement || ABOUT_COMPANY.test(line)) continue
+    const n = parseInt(m[1], 10)
+    if (n >= 0 && n <= 30) found.push(n)
+  }
+
+  if (found.length) {
+    // The lowest stated requirement is the real bar; a posting asking for
+    // "3+ years in React and 8+ years in industry" wants three.
+    const years = Math.min(...found)
+    // Five years is where postings start describing senior work, and it is
+    // well past what anyone early in their career can claim. Treating it as
+    // mid flattered the match and put unreachable roles near the top.
+    if (years >= 5) return 'senior'
     if (years >= 3) return 'mid'
     return 'entry'
   }
@@ -312,6 +356,11 @@ export function toSeniority(title, description) {
   if (
     /\b(?:mentor(?:ing|ship)? (?:junior|other|more junior)|lead a team of|line manage|own the (?:technical )?roadmap|set the technical direction|define the architecture)\b/.test(d)
   )
+    return 'senior'
+
+  /* Language that only appears in postings aimed at people already
+     established. Weaker than a stated year count, so it runs last. */
+  if (/\b(?:proven track record|extensive experience|deep expertise|seasoned|highly experienced)\b/.test(d))
     return 'senior'
 
   return 'unknown'

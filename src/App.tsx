@@ -8,9 +8,12 @@ import {
   Heart,
   Layers,
   Lock,
+  Clock,
+  Download,
   RefreshCw,
   Search,
   Sparkles,
+  Upload,
 } from 'lucide-react'
 import Globe from '@/three/Globe'
 import JobCard from '@/components/JobCard'
@@ -18,7 +21,8 @@ import CvDrop from '@/components/CvDrop'
 import AtsPanel from '@/components/AtsPanel'
 import Filters, { DEFAULT_FILTERS, type FilterState } from '@/components/Filters'
 import { Reveal } from '@/components/Reveal'
-import type { CvProfile, Job, Prefs } from '@/lib/types'
+import { STATUSES } from '@/components/StatusPicker'
+import type { AppStatus, Application, CvProfile, Job, Prefs } from '@/lib/types'
 import { agoLabel, daysAgo, freshness, loadIndex, type Index } from '@/lib/data'
 import { dailyPicks, learn, rank, type Scored } from '@/lib/match'
 import * as store from '@/lib/storage'
@@ -86,8 +90,9 @@ export default function App() {
     [jobs]
   )
 
-  const onSave = useCallback(
-    (id: string) => setPrefs((p) => ({ ...p, saved: store.toggle(p.saved, id) })),
+  const onSave = useCallback((id: string) => setPrefs((p) => store.toggleSaved(p, id)), [])
+  const onStatus = useCallback(
+    (id: string, s: AppStatus) => setPrefs((p) => store.setStatus(p, id, s)),
     []
   )
   const onLike = useCallback(
@@ -195,6 +200,8 @@ export default function App() {
       onSave={onSave}
       onLike={onLike}
       onHide={onHide}
+      app={prefs.applications[item.job.id]}
+      onStatus={onStatus}
     />
   )
 
@@ -298,17 +305,39 @@ export default function App() {
             <div>
               <SectionHead
                 icon={Bookmark}
-                title="Saved"
-                note="Jobs you set aside. Stored in this browser only."
+                title="Your pipeline"
+                note="Everything you set aside, and where each one has got to. Stored in this browser only."
                 count={savedItems.length}
               />
+
               {savedItems.length === 0 ? (
                 <Empty
                   title="Nothing saved yet"
-                  body="Use the bookmark button on any listing to keep it here."
+                  body="Bookmark a listing and it lands here, where you can track it from applied through to an offer."
                 />
               ) : (
-                <div className="mt-4 space-y-3">{savedItems.map(renderCard)}</div>
+                <>
+                  <Pipeline items={savedItems} apps={prefs.applications} />
+
+                  {/* Grouped so the things needing action are not buried under
+                      the ones already closed. */}
+                  {STATUSES.map((s) => {
+                    const group = savedItems.filter(
+                      (it) => (prefs.applications[it.job.id]?.status ?? 'saved') === s.value
+                    )
+                    if (!group.length) return null
+                    return (
+                      <div key={s.value} className="mt-6">
+                        <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-dim">
+                          <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                          {s.label}
+                          <span className="font-mono text-[11px] font-normal">{group.length}</span>
+                        </p>
+                        <div className="space-y-3">{group.map(renderCard)}</div>
+                      </div>
+                    )
+                  })}
+                </>
               )}
             </div>
 
@@ -332,6 +361,8 @@ export default function App() {
                 <div className="mt-4 space-y-3">{likedItems.map(renderCard)}</div>
               )}
             </div>
+
+            <Backup prefs={prefs} onImport={setPrefs} />
           </section>
         )}
 
@@ -635,6 +666,112 @@ function HowItWorks() {
         ))}
       </div>
     </section>
+  )
+}
+
+/**
+ * A count per stage, plus the one number that actually matters when you are
+ * mid-hunt: how many applications are still waiting on a reply.
+ */
+function Pipeline({ items, apps }: { items: Scored[]; apps: Record<string, Application> }) {
+  const counts = STATUSES.map((s) => ({
+    ...s,
+    n: items.filter((it) => (apps[it.job.id]?.status ?? 'saved') === s.value).length,
+  }))
+
+  const waiting = items.filter((it) => {
+    const a = apps[it.job.id]
+    return a?.status === 'applied' && a.appliedAt && daysAgo(a.appliedAt) >= 14
+  }).length
+
+  return (
+    <div className="mt-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {counts.map((s) => (
+          <div key={s.value} className="rounded-xl border border-line/60 bg-abyss/50 px-3 py-2.5">
+            <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-dim">
+              <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+              {s.label}
+            </p>
+            <p className="mt-0.5 font-display text-lg font-bold text-chalk">{s.n}</p>
+          </div>
+        ))}
+      </div>
+
+      {waiting > 0 && (
+        <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber/30 bg-amber/10 px-3 py-2 text-xs text-amber">
+          <Clock size={13} />
+          {waiting} application{waiting > 1 ? 's have' : ' has'} had no reply for over two weeks.
+        </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Moving your pipeline between devices.
+ *
+ * There is no account, so nothing syncs on its own. A file you download and
+ * re-open elsewhere is the honest version of that, and it also means a cleared
+ * browser does not wipe months of tracking.
+ */
+function Backup({ prefs, onImport }: { prefs: Prefs; onImport: (p: Prefs) => void }) {
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  const download = () => {
+    const blob = new Blob([store.exportPrefs(prefs)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `job-radar-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setMsg({ ok: true, text: 'Downloaded.' })
+  }
+
+  const upload = async (file: File | undefined) => {
+    if (!file) return
+    try {
+      const next = store.importPrefs(await file.text())
+      onImport(next)
+      setMsg({ ok: true, text: `Restored ${next.saved.length} saved and ${next.liked.length} liked.` })
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : 'That file could not be read.' })
+    }
+  }
+
+  const count = prefs.saved.length + prefs.liked.length
+
+  return (
+    <div className="panel p-5">
+      <h3 className="font-display text-base font-semibold text-chalk">Move this to another device</h3>
+      <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-mist">
+        Your pipeline lives in this browser, so it does not appear on your phone or survive
+        clearing site data. Download a copy and open it on the other device to carry it across.
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button type="button" onClick={download} disabled={count === 0} className="btn-ghost !text-xs">
+          <Download size={13} />
+          Download backup
+        </button>
+
+        <label className="btn-ghost cursor-pointer !text-xs">
+          <Upload size={13} />
+          Restore from file
+          <input
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            onChange={(e) => void upload(e.target.files?.[0])}
+          />
+        </label>
+      </div>
+
+      {msg && (
+        <p className={`mt-3 text-xs ${msg.ok ? 'text-mint' : 'text-rose'}`}>{msg.text}</p>
+      )}
+    </div>
   )
 }
 

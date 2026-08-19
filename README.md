@@ -24,6 +24,10 @@ If you're looking for work, I'd genuinely suggest giving it a go.
 
 **Saves and learns.** Bookmark what looks worth an application. Heart the ones you want more of. After a handful of hearts, ranking starts leaning your way — deliberately not before then, because three clicks isn't a preference, it's noise.
 
+**Tracks your applications.** Every saved job moves through Saved → Applied → Interviewing → Offer or Closed, with the date you applied kept. Two weeks after applying with no reply, it says so. Three weeks into a real hunt you will not remember who you sent what to, and this is the part that stops that becoming a problem.
+
+**Moves between devices.** There's no account, so nothing syncs on its own. Download a backup file and open it on your phone to carry your pipeline across. It also means clearing your browser doesn't wipe months of tracking.
+
 **Checks your CV reads cleanly.** More on that below.
 
 ---
