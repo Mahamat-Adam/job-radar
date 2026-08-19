@@ -121,6 +121,18 @@ company's jobs page and look at the address:
 
 Add your line, commit, and the next run picks it up.
 
+### Find new companies automatically
+
+If you have Node available, `npm run discover` takes a list of company names,
+works out which hiring system each one uses, checks whether its board answers,
+and prints a block ready to paste into `pipeline/companies.mjs`. It also counts
+how many junior-looking roles each board currently has, so you can prioritise
+the ones that hire early-career people.
+
+Edit the `CANDIDATES` list at the top of `scripts/discover-boards.mjs` to add
+companies you are interested in. It runs one request at a time and takes a
+while — that is deliberate.
+
 **If a company's board is wrong or has moved**, the run does not fail. It logs
 the company under "board(s) did not answer" and carries on. To find those:
 Actions → click the latest run → click **build** → expand **Collect jobs** and

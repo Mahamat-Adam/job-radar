@@ -41,11 +41,23 @@ export const ROLE_GROUPS = [
     id: 'automation',
     on: true,
     label: 'Automation, bots and scraping',
-    queries: ['automation engineer', 'rpa developer', 'web scraping engineer'],
+    queries: ['automation engineer', 'rpa developer', 'test automation engineer', 'sdet'],
+    /**
+     * The first version of these required the word immediately before the
+     * noun, so "Business Automation Specialist" matched but "Engineer,
+     * Automation Platform" did not. It found six jobs in a whole run. Allowing
+     * the qualifier anywhere in the title is what these should have been.
+     */
     match: [
-      /\b(?:automation|rpa)\s+(?:engineer|developer|specialist)\b/i,
-      /\b(?:test automation|qa automation)\s+engineer\b/i,
-      /\b(?:scraping|crawler|data extraction)\b.*\b(?:engineer|developer)\b/i,
+      /\b(?:automation|rpa|robotic process)\b[^,]*\b(?:engineer|developer|specialist|analyst|consultant|architect)\b/i,
+      // Bounded rather than comma-stopped: "Engineer, Automation Platform" is
+      // a real and common title, and refusing to cross the comma missed it.
+      /\b(?:engineer|developer|specialist)\b.{0,40}\b(?:automation|rpa)\b/i,
+      /\bsdet\b/i,
+      /\bsoftware (?:development )?engineer in test\b/i,
+      /\b(?:qa|quality assurance|test)\b[^,]*\b(?:automation|engineer)\b/i,
+      /\b(?:scraping|scraper|crawler|web data|data extraction)\b/i,
+      /\b(?:workflow|process|business) automation\b/i,
     ],
   },
   {

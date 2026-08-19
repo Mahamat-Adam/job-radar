@@ -287,16 +287,33 @@ export function toSeniority(title, description) {
   if (/\b(?:ii|iii|3)\b/.test(t)) return 'mid'
   if (/\b(?:i|1)\b$/.test(t)) return 'entry'
 
-  // Nothing in the title, so fall back to any stated experience requirement.
+  // Nothing in the title, so read the description.
   const d = String(description ?? '').toLowerCase()
-  const m = d.match(/\b(\d{1,2})\s*\+?\s*(?:-|–|to)?\s*(?:\d{1,2})?\s*years?(?:'|’)?\s+(?:of\s+)?(?:relevant\s+|professional\s+|proven\s+|hands[- ]on\s+)?experience/)
+
+  /* An explicit graduate intake is the strongest signal there is, and it beats
+     a years-of-experience line, which is often quoting a "nice to have". */
+  if (
+    /\b(?:new grad(?:uate)?s?|recent graduates?|graduate (?:programme|program|scheme|role)|campus hire|final[- ]year students?|no (?:prior |previous )?experience (?:is )?(?:required|necessary))\b/.test(d)
+  )
+    return 'entry'
+
+  const m = d.match(
+    /\b(\d{1,2})\s*\+?\s*(?:-|–|to)?\s*(?:\d{1,2})?\s*years?(?:'|’)?\s+(?:of\s+)?(?:relevant\s+|professional\s+|proven\s+|hands[- ]on\s+)?experience/
+  )
   if (m) {
     const years = parseInt(m[1], 10)
     if (years >= 7) return 'senior'
     if (years >= 3) return 'mid'
-    if (years >= 1) return 'entry'
     return 'entry'
   }
+
+  /* Responsibilities that only exist above a certain level. Deliberately
+     narrow: these have to be the job's own duties, not team description. */
+  if (
+    /\b(?:mentor(?:ing|ship)? (?:junior|other|more junior)|lead a team of|line manage|own the (?:technical )?roadmap|set the technical direction|define the architecture)\b/.test(d)
+  )
+    return 'senior'
+
   return 'unknown'
 }
 
