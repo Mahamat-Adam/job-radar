@@ -10,7 +10,6 @@
     "geo": "node scripts/build-geo.mjs",
     "collect": "node pipeline/index.mjs",
     "probe": "node pipeline/index.mjs --probe",
-    "shot": "node scripts/shot.mjs",
     "reprocess": "node pipeline/index.mjs --from-cache",
     "discover": "node scripts/discover-boards.mjs",
     "fonts": "node scripts/fetch-fonts.mjs"
