@@ -333,10 +333,18 @@ async function main() {
     // countries array that the old front end read as "open worldwide". Derive
     // the flag from the location text we kept, so a carried listing is judged
     // by the same rule as a freshly collected one.
+    const carriedCountries = resolveCountries(j.location)
     jobs.push({
       ...j,
       anywhere: j.anywhere === undefined ? isAnywhere(j.location) : j.anywhere,
-      broad: j.broad === undefined ? resolveCountries(j.location).scope === 'region' : j.broad,
+      // Re-resolved from the location kept with the record, so a listing that
+      // is only carried rather than re-collected is judged by the same rule as
+      // a fresh one instead of keeping country tags it picked up under the old
+      // one. Left alone when the location resolves to nothing, since the
+      // original may have drawn on text we no longer hold.
+      ...(carriedCountries.countries.length
+        ? { countries: carriedCountries.countries, broad: carriedCountries.scope === 'region' }
+        : { broad: j.broad === undefined ? false : j.broad }),
       // Carried rows keep whatever summary they were written with, so one that
       // predates the stripping would show markup until it aged out.
       summary: stripHtml(j.summary),
