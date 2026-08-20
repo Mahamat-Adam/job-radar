@@ -11,6 +11,7 @@ import {
   cleanTitle,
   fingerprint,
   isAnywhere,
+  normCompany,
   quality,
   stripHtml,
   summarize,
@@ -123,6 +124,43 @@ function mergeCountries(aCountries, aScope, bCountries, bScope) {
   // Anything else pairs a real answer with an empty one, where a union is just
   // the non-empty side.
   return { countries: union.countries, scope: aCountries.length ? aScope : bScope }
+}
+
+/**
+ * At most a handful of listings per employer.
+ *
+ * The index was 54% top-25 employers — Snowflake 94, Databricks 94, OpenAI 85,
+ * Stripe 56 — while 190 employers had one or two listings each and never
+ * surfaced past the first few pages. For anyone who is not going to win a place
+ * at a company with tens of thousands of applicants, that is the wrong half of
+ * the market occupying every screen. Capping does not hide those employers; it
+ * stops a handful of very large boards from being the entire list.
+ *
+ * Within an employer the more junior roles are kept first and the freshest
+ * after that, because the roles being crowded out were precisely the ones worth
+ * an application.
+ */
+const PER_COMPANY = 8
+const LEVEL_ORDER = { intern: 0, entry: 1, mid: 2, unknown: 3, senior: 4, lead: 5 }
+
+function capPerCompany(all) {
+  const ordered = [...all].sort((a, b) => {
+    const la = LEVEL_ORDER[a.seniority] ?? 3
+    const lb = LEVEL_ORDER[b.seniority] ?? 3
+    if (la !== lb) return la - lb
+    return Date.parse(b.posted) - Date.parse(a.posted)
+  })
+
+  const seen = new Map()
+  const kept = []
+  for (const j of ordered) {
+    const key = normCompany(j.company)
+    const n = seen.get(key) ?? 0
+    if (n >= PER_COMPANY) continue
+    seen.set(key, n + 1)
+    kept.push(j)
+  }
+  return kept
 }
 
 function normalizeAll(raw, previousSeen) {
@@ -358,6 +396,13 @@ async function main() {
   if (closed) log(`  ${closed} listing(s) removed — no longer on the employer's board`)
   if (agedOut) log(`  ${agedOut} listing(s) aged out`)
   if (carried) log(`  ${carried} listing(s) carried over unconfirmed`)
+
+  const capped = capPerCompany(jobs)
+  if (capped.length < jobs.length) {
+    log(`  ${jobs.length - capped.length} listing(s) trimmed — over ${PER_COMPANY} per employer`)
+  }
+  jobs.length = 0
+  jobs.push(...capped)
 
   jobs.sort((a, b) => Date.parse(b.posted) - Date.parse(a.posted))
 
