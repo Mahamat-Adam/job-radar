@@ -20,6 +20,13 @@ export type Job = {
   countries: string[]
   /** True only when the posting itself says it is open anywhere. */
   anywhere?: boolean
+  /**
+   * The posting named a region rather than a country, so `countries` is our
+   * expansion of it and not a list the employer wrote. A role saying "Europe"
+   * carries eighteen codes it never claimed, which is fine for browsing and
+   * misleading when someone picks one country.
+   */
+  broad?: boolean
   /** Human location string exactly as the employer wrote it. */
   location: string
   remote: RemoteKind

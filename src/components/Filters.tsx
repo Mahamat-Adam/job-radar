@@ -280,8 +280,12 @@ export default function Filters({ value, onChange, counts, total, showing }: Pro
             onChange={(e) => set('worldwide', e.target.checked)}
             className="h-3.5 w-3.5 accent-beam"
           />
-          <span className="text-xs text-mist">Include worldwide remote postings</span>
+          <span className="text-xs text-mist">Include region-wide and worldwide roles</span>
         </label>
+        <p className="mt-1 text-[11px] leading-relaxed text-dim">
+          Roles advertised for a whole region — "Europe", "APAC" — rather than for a country. They
+          may well be open where you are, but the employer did not name it.
+        </p>
 
         <input
           type="search"

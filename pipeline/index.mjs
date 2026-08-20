@@ -171,8 +171,21 @@ function normalizeAll(raw, previousSeen) {
     }
 
     const id = fingerprint(r.company, title)
-    const where = `${r.location ?? ''} ${extra}`
-    const { countries, scope } = resolveCountries(where)
+    /*
+     * The location field is authoritative, and `extra` is only consulted when
+     * it says nothing usable.
+     *
+     * Reading both together let any country named anywhere in the surrounding
+     * text attach itself to the posting: a role whose location was "JP-Tokyo"
+     * came out tagged with seven countries and turned up under a Switzerland
+     * filter. Where the employer stated a location, that is the answer.
+     */
+    const place = String(r.location ?? '').trim()
+    const primary = resolveCountries(place)
+    const { countries, scope } =
+      primary.countries.length || primary.scope === 'anywhere'
+        ? primary
+        : resolveCountries(`${place} ${extra}`)
 
     const job = {
       id,
@@ -182,7 +195,11 @@ function normalizeAll(raw, previousSeen) {
       // Only a posting that says so is open to everyone. Without this the front
       // end reads an unresolved location as "worldwide" and shows a Hybrid role
       // in Berlin to somebody who filtered to Canada.
-      anywhere: countries.length === 0 && isAnywhere(where),
+      anywhere: countries.length === 0 && isAnywhere(place),
+      // The posting named a region, not a country, and those codes are our
+      // expansion of it. Recorded so picking one country does not silently
+      // pull in every role that merely said "Europe".
+      broad: scope === 'region',
       location: String(r.location ?? '').trim().slice(0, 120) || 'Worldwide',
       remote: toRemote(`${r.location ?? ''} ${title} ${description.slice(0, 900)}`, r.remoteHint),
       seniority: toSeniority(title, description),
@@ -221,16 +238,21 @@ function normalizeAll(raw, previousSeen) {
       // open-to-anywhere claim only survives when neither side placed the role.
       const anywhere =
         merged.countries.length === 0 && (existing.anywhere === true || job.anywhere === true)
+      // Whatever scope the merge settled on decides whether the result is still
+      // a region guess.
+      const broad = merged.scope === 'region'
 
       if (better) {
         job.countries = merged.countries
         job.anywhere = anywhere
+        job.broad = broad
         job.tags = [...new Set([...existing.tags, ...job.tags])]
         job.seen = existing.seen
         kept.set(id, job)
       } else {
         existing.countries = merged.countries
         existing.anywhere = anywhere
+        existing.broad = broad
         existing.tags = [...new Set([...existing.tags, ...job.tags])]
       }
       scopeOf.set(id, merged.scope)
@@ -314,6 +336,7 @@ async function main() {
     jobs.push({
       ...j,
       anywhere: j.anywhere === undefined ? isAnywhere(j.location) : j.anywhere,
+      broad: j.broad === undefined ? resolveCountries(j.location).scope === 'region' : j.broad,
       // Carried rows keep whatever summary they were written with, so one that
       // predates the stripping would show markup until it aged out.
       summary: stripHtml(j.summary),

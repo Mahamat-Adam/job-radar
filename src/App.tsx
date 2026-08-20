@@ -146,7 +146,14 @@ export default function App() {
            that array is also empty when the location simply could not be parsed,
            and those roles have a country, we just do not know which. */
         const openToAll = job.anywhere === true && filters.worldwide
-        if (!hit && !openToAll) return false
+        /* A posting that said only "Europe" carries eighteen country codes we
+           expanded ourselves. Picking Switzerland should not quietly return it
+           unless region-wide roles were asked for. */
+        if (job.broad) {
+          if (!hit || !filters.worldwide) return false
+        } else if (!hit && !openToAll) {
+          return false
+        }
       } else if (!filters.worldwide && job.anywhere === true) {
         return false
       }
@@ -259,6 +266,7 @@ export default function App() {
       onLike={onLike}
       onHide={onHide}
       onOpen={onOpen}
+      highlight={filters.countries}
       app={prefs.applications[item.job.id]}
       onStatus={onStatus}
       gone={gone}

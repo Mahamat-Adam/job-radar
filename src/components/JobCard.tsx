@@ -19,6 +19,8 @@ type Props = {
   onHide: (id: string) => void
   /** Fired as the employer's listing is opened, before the tab leaves. */
   onOpen: (id: string, job?: Job) => void
+  /** Countries currently filtered on, so the card can lead with them. */
+  highlight?: string[]
   /** Present only when the job is saved; drives the pipeline control. */
   app?: Application
   onStatus?: (id: string, s: AppStatus) => void
@@ -90,6 +92,7 @@ function JobCardBase({
   onLike,
   onHide,
   onOpen,
+  highlight,
   app,
   onStatus,
   gone,
@@ -98,8 +101,17 @@ function JobCardBase({
   const pay = salaryLabel(job)
   const tone = scoreTone(item.score)
 
-  const places = job.countries.length
-    ? job.countries.slice(0, 3).map((c) => ({ iso2: c, name: BY_ISO2[c]?.name ?? c }))
+  /* The country you filtered by leads, because otherwise a role tagged with
+     eighteen of them shows "United Kingdom · Germany · Netherlands +15" to
+     someone who picked Switzerland, and reads like the filter is broken. */
+  const ordered = highlight?.length
+    ? [...job.countries].sort(
+        (a, b) => Number(highlight.includes(b)) - Number(highlight.includes(a)),
+      )
+    : job.countries
+
+  const places = ordered.length
+    ? ordered.slice(0, 3).map((c) => ({ iso2: c, name: BY_ISO2[c]?.name ?? c }))
     : []
 
   /*
