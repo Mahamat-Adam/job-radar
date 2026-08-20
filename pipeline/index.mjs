@@ -11,6 +11,7 @@ import {
   fingerprint,
   isAnywhere,
   quality,
+  stripHtml,
   summarize,
   resolveCountries,
   toRemote,
@@ -151,8 +152,11 @@ function normalizeAll(raw, previousSeen) {
       continue
     }
 
-    const description = String(r.description ?? '')
-    const haystack = `${title}\n${description}\n${r.extra ?? ''}`
+    // Stripped once, here, so the summary, the skills and the quality score all
+    // read the same plain text rather than each coping with markup separately.
+    const description = stripHtml(r.description)
+    const extra = stripHtml(r.extra)
+    const haystack = `${title}\n${description}\n${extra}`
     const q = quality({
       posted,
       url: r.url,
@@ -167,7 +171,7 @@ function normalizeAll(raw, previousSeen) {
     }
 
     const id = fingerprint(r.company, title)
-    const where = `${r.location ?? ''} ${r.extra ?? ''}`
+    const where = `${r.location ?? ''} ${extra}`
     const { countries, scope } = resolveCountries(where)
 
     const job = {
@@ -195,7 +199,7 @@ function normalizeAll(raw, previousSeen) {
       quality: Math.round(q * 100) / 100,
     }
 
-    const salary = toSalary(`${r.extra ?? ''} ${description.slice(0, 2500)}`)
+    const salary = toSalary(`${extra} ${description.slice(0, 2500)}`)
     if (salary) job.salary = salary
     if (sponsorSignal(haystack)) job.sponsor = true
 
@@ -307,7 +311,13 @@ async function main() {
     // countries array that the old front end read as "open worldwide". Derive
     // the flag from the location text we kept, so a carried listing is judged
     // by the same rule as a freshly collected one.
-    jobs.push(j.anywhere === undefined ? { ...j, anywhere: isAnywhere(j.location) } : j)
+    jobs.push({
+      ...j,
+      anywhere: j.anywhere === undefined ? isAnywhere(j.location) : j.anywhere,
+      // Carried rows keep whatever summary they were written with, so one that
+      // predates the stripping would show markup until it aged out.
+      summary: stripHtml(j.summary),
+    })
     carried++
   }
 

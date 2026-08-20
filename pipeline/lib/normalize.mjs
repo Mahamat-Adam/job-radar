@@ -551,6 +551,46 @@ export function cleanTitle(s) {
     .slice(0, 140)
 }
 
+const ENTITIES = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+  ndash: '–', mdash: '—', hellip: '…', rsquo: '’', lsquo: '‘',
+  rdquo: '”', ldquo: '“', bull: '·', middot: '·',
+}
+
+/**
+ * Plain text out of a description that may or may not be markup.
+ *
+ * Company boards hand back prose; some aggregators hand back a full HTML
+ * document, and one of them put "<p><strong>Our roster has an opening…" on a
+ * card. Blocks become a space rather than nothing, so that closing one tag and
+ * opening the next does not weld the last word of a paragraph onto the first
+ * word of the following one.
+ *
+ * Applied to the description before anything reads it, so the summary, the
+ * skill extraction and the quality score all judge the same clean text.
+ */
+export function stripHtml(text) {
+  const raw = String(text ?? '')
+  // The overwhelming majority is already plain; skip the work for those.
+  if (!/[<&]/.test(raw)) return raw
+
+  return raw
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/gi, (whole, code) => {
+      if (code[0] === '#') {
+        const n = code[1] === 'x' || code[1] === 'X'
+          ? parseInt(code.slice(2), 16)
+          : parseInt(code.slice(1), 10)
+        return Number.isFinite(n) && n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : ' '
+      }
+      return ENTITIES[code.toLowerCase()] ?? whole
+    })
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 export function summarize(text, max = 320) {
   const t = String(text ?? '').replace(/\s+/g, ' ').trim()
   if (t.length <= max) return t
