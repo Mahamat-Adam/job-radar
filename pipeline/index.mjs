@@ -85,7 +85,7 @@ async function collect(answered) {
       opts: {
         queries: SEARCH_QUERIES,
         industries: ['engineering', 'dev'],
-        pages: PROBE ? 1 : 3,
+        pages: PROBE ? 1 : (s.pages ?? 3),
       },
     })),
   ]

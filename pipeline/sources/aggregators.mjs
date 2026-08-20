@@ -61,6 +61,17 @@ export const remotive = {
 export const arbeitnow = {
   name: 'Arbeitnow',
   direct: false,
+  /*
+   * Paged deeper than the rest on purpose.
+   *
+   * This feed is where the employer variety comes from: 183 listings across 120
+   * distinct employers, against 679 listings from 139 employers for all the
+   * curated boards combined. Stopping at three pages was cutting it off at 67
+   * matching roles from 50 employers, where eleven pages reaches 181 from 127.
+   * getJson already spaces every request and backs off on a 429, so depth here
+   * costs run time rather than politeness.
+   */
+  pages: 10,
   async fetch({ pages = 3 }) {
     const out = []
     for (let p = 1; p <= pages; p++) {
@@ -117,6 +128,25 @@ export const jobicy = {
   },
 }
 
+/**
+ * Himalayas' companyName is not dependable: about half the rows carry the
+ * literal string "name", and others arrive wrapped in angle brackets such as
+ * "<Vem pra Ponta>". Being non-empty, all of it sailed past the usual fallback
+ * and 16 listings published their employer as "name". The slug beside it is
+ * always clean, so it is the answer whenever the name is not usable.
+ */
+const PLACEHOLDER = /^(?:name|company|companyname|null|undefined|n\/?a|-)$/i
+
+function himalayasCompany(j) {
+  const named = String(j.companyName ?? '').replace(/[<>]/g, '').trim()
+  if (named && !PLACEHOLDER.test(named)) return named
+  return String(j.companySlug ?? '')
+    .split('-')
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
 export const himalayas = {
   name: 'Himalayas',
   direct: false,
@@ -132,7 +162,7 @@ export const himalayas = {
         out.push({
           source: 'Himalayas',
           title: j.title,
-          company: j.companyName,
+          company: himalayasCompany(j),
           location: list(j.locationRestrictions).join(', ') || 'Worldwide',
           remoteHint: true,
           url: j.applicationLink || j.guid,
