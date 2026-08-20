@@ -1077,6 +1077,17 @@ function Footer({ generated, total }: { generated: string | null; total: number 
           </p>
         </div>
       </div>
+
+      {/* Same sign-off as the portfolio, so the two read as one person's work. */}
+      <div className="border-t border-line/40">
+        <div className="mx-auto w-full max-w-[1240px] px-4 py-6 sm:px-6">
+          <p className="text-center text-sm text-mist">Thank you for passing by.</p>
+          <div className="mt-4 flex flex-col items-center justify-between gap-2 text-xs text-dim sm:flex-row">
+            <p>© {new Date().getFullYear()} Mahamat Adam. All rights reserved.</p>
+            <p className="font-mono text-[11px]">Built with React, TypeScript &amp; Tailwind CSS</p>
+          </div>
+        </div>
+      </div>
     </footer>
   )
 }
