@@ -12,7 +12,7 @@ import {
   isAnywhere,
   quality,
   summarize,
-  toCountries,
+  resolveCountries,
   toRemote,
   toSalary,
   toSeniority,
@@ -102,10 +102,34 @@ async function collect(answered) {
   return { raw, report }
 }
 
+/**
+ * Combine the countries of two postings of the same role.
+ *
+ * Unioning keeps coverage when both sides speak with the same authority. They
+ * often do not: one row names a city, the other says only "APAC", which we
+ * expand into eleven member countries. Unioning those asserts the employer is
+ * hiring in all eleven, and a role explicitly located in Sydney ended up listed
+ * under Malaysia. A row that names real places therefore wins outright over a
+ * region guess, and the guess is only kept when nothing more specific exists.
+ */
+function mergeCountries(aCountries, aScope, bCountries, bScope) {
+  const union = { countries: [...new Set([...aCountries, ...bCountries])], scope: aScope }
+  if (aScope === bScope) return union
+  if (aScope === 'named' && bScope === 'region') return { countries: aCountries, scope: 'named' }
+  if (bScope === 'named' && aScope === 'region') return { countries: bCountries, scope: 'named' }
+  // Anything else pairs a real answer with an empty one, where a union is just
+  // the non-empty side.
+  return { countries: union.countries, scope: aCountries.length ? aScope : bScope }
+}
+
 function normalizeAll(raw, previousSeen) {
   const feedCutoff = Date.now() - MAX_AGE_FEED * 86_400_000
   const directCutoff = Date.now() - MAX_AGE_DIRECT * 86_400_000
   const kept = new Map()
+  /** id -> how that record's countries were resolved, for merge decisions only.
+      Deliberately kept beside the records rather than on them, so nothing extra
+      is written into the published index. */
+  const scopeOf = new Map()
 
   let dropped = { title: 0, url: 0, stale: 0, thin: 0, dupe: 0 }
 
@@ -144,7 +168,7 @@ function normalizeAll(raw, previousSeen) {
 
     const id = fingerprint(r.company, title)
     const where = `${r.location ?? ''} ${r.extra ?? ''}`
-    const countries = toCountries(where)
+    const { countries, scope } = resolveCountries(where)
 
     const job = {
       id,
@@ -178,6 +202,7 @@ function normalizeAll(raw, previousSeen) {
     const existing = kept.get(id)
     if (!existing) {
       kept.set(id, job)
+      scopeOf.set(id, scope)
     } else {
       dropped.dupe++
       // Prefer the employer's own posting, then the better-scored one, then
@@ -186,16 +211,25 @@ function normalizeAll(raw, previousSeen) {
         (job.direct === true && existing.direct !== true) ||
         job.quality > existing.quality ||
         (job.quality === existing.quality && job.posted < existing.posted)
+
+      const merged = mergeCountries(existing.countries, scopeOf.get(id), job.countries, scope)
+      // A merge that lands on real countries settles the question, so the
+      // open-to-anywhere claim only survives when neither side placed the role.
+      const anywhere =
+        merged.countries.length === 0 && (existing.anywhere === true || job.anywhere === true)
+
       if (better) {
-        // Countries and tags are unioned so a merge never loses coverage.
-        job.countries = [...new Set([...existing.countries, ...job.countries])]
+        job.countries = merged.countries
+        job.anywhere = anywhere
         job.tags = [...new Set([...existing.tags, ...job.tags])]
         job.seen = existing.seen
         kept.set(id, job)
       } else {
-        existing.countries = [...new Set([...existing.countries, ...job.countries])]
+        existing.countries = merged.countries
+        existing.anywhere = anywhere
         existing.tags = [...new Set([...existing.tags, ...job.tags])]
       }
+      scopeOf.set(id, merged.scope)
     }
   }
 

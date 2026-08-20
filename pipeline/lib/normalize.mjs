@@ -203,9 +203,22 @@ export function isAnywhere(locationText) {
   return ANYWHERE.test(String(locationText ?? '').toLowerCase())
 }
 
-export function toCountries(locationText) {
+/**
+ * Countries for a location, plus how confidently we got there.
+ *
+ *   named   the text names real places, so the codes are the employer's own words
+ *   region  the text only said something like "APAC", and we expanded that into
+ *           member countries — our inference, not a claim they made
+ *   anywhere / none  no countries at all, see isAnywhere for which
+ *
+ * The scope matters when two postings of the same role are merged. Unioning a
+ * region expansion into a record that names a city asserts something nobody
+ * said: a Sydney role picked up all eleven APAC countries that way and started
+ * advertising itself in Malaysia.
+ */
+export function resolveCountries(locationText) {
   const raw = String(locationText ?? '').trim()
-  if (!raw) return []
+  if (!raw) return { countries: [], scope: 'none' }
 
   const hay = raw.toLowerCase()
 
@@ -213,16 +226,22 @@ export function toCountries(locationText) {
   if (ANYWHERE.test(hay)) {
     // Unless it also names specific places, e.g. "Remote (Germany, Poland)".
     const named = [...new Set([...matchNames(hay), ...matchCodes(raw)])]
-    return named.length ? named : []
+    return named.length
+      ? { countries: named, scope: 'named' }
+      : { countries: [], scope: 'anywhere' }
   }
 
   const found = [...new Set([...matchNames(hay), ...matchCodes(raw)])]
-  if (found.length) return found
+  if (found.length) return { countries: found, scope: 'named' }
 
   for (const [word, list] of Object.entries(REGION_WORDS)) {
-    if (mentions(hay, word)) return list
+    if (mentions(hay, word)) return { countries: list, scope: 'region' }
   }
-  return []
+  return { countries: [], scope: 'none' }
+}
+
+export function toCountries(locationText) {
+  return resolveCountries(locationText).countries
 }
 
 /**
