@@ -92,6 +92,31 @@ function snapshot(job: Job): Job {
   return { ...job, summary: job.summary.slice(0, 240) }
 }
 
+/**
+ * Records that you went off to the employer's own listing, saving the job if it
+ * was not saved already.
+ *
+ * Opening a listing is the strongest signal of intent the app ever gets — you
+ * do not leave the page for a role you are not considering — so it is treated
+ * as one. The job is filed immediately, which is what makes it findable when
+ * you come back with the form submitted, and it stays visibly unconfirmed until
+ * you say whether the application actually went in.
+ */
+export function markOpened(prefs: Prefs, id: string, job?: Job): Prefs {
+  const now = new Date().toISOString()
+  const current = prefs.applications[id]
+  return {
+    ...prefs,
+    saved: prefs.saved.includes(id) ? prefs.saved : [...prefs.saved, id],
+    applications: {
+      ...prefs.applications,
+      [id]: current
+        ? { ...current, openedAt: now }
+        : { status: 'saved', at: now, openedAt: now, job: job ? snapshot(job) : undefined },
+    },
+  }
+}
+
 export function setStatus(prefs: Prefs, id: string, status: AppStatus): Prefs {
   const now = new Date().toISOString()
   const current = prefs.applications[id]
@@ -101,6 +126,9 @@ export function setStatus(prefs: Prefs, id: string, status: AppStatus): Prefs {
     // The date you applied is worth keeping once set — it is what tells you a
     // reply is overdue — so later stages do not overwrite it.
     appliedAt: status === 'applied' ? (current?.appliedAt ?? now) : current?.appliedAt,
+    // Kept across status changes: it is the record of having gone to the
+    // employer's page, which stays true whatever you later decide came of it.
+    openedAt: current?.openedAt,
     note: current?.note,
     job: current?.job,
   }

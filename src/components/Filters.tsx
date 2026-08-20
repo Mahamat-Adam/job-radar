@@ -25,7 +25,16 @@ export const DEFAULT_FILTERS: FilterState = {
   maxDays: 30,
   maxPostedDays: 3650,
   remote: [],
-  levels: [],
+  /*
+   * Senior and Lead start off.
+   *
+   * They are 71% of the index — 1,303 of 1,843 — and they are the 71% a new
+   * graduate cannot apply for, so leaving them on meant scrolling past four
+   * unreachable roles for every reachable one. They are still one tap away
+   * rather than removed, because the level is read off the posting's wording
+   * and is sometimes wrong.
+   */
+  levels: ['intern', 'entry', 'mid', 'unknown'],
   sponsorOnly: false,
   sort: 'match',
 }
@@ -49,9 +58,16 @@ const LEVELS: { value: Seniority; label: string }[] = [
   { value: 'intern', label: 'Intern' },
   { value: 'entry', label: 'Entry' },
   { value: 'mid', label: 'Mid' },
+  // Listed because it is a fifth of the index and a good part of it is junior
+  // work whose title simply never said so. Hiding it silently would drop those.
+  { value: 'unknown', label: 'Unspecified' },
   { value: 'senior', label: 'Senior' },
   { value: 'lead', label: 'Lead' },
 ]
+
+function sameSet<T>(a: T[], b: T[]): boolean {
+  return a.length === b.length && a.every((x) => b.includes(x))
+}
 
 function toggleIn<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((x) => x !== value) : [...list, value]
@@ -82,7 +98,9 @@ export default function Filters({ value, onChange, counts, total, showing }: Pro
   const active =
     value.countries.length +
     value.remote.length +
-    value.levels.length +
+    // Counted only when it differs from the default, which is itself a
+    // selection — otherwise the panel would open claiming four active filters.
+    (sameSet(value.levels, DEFAULT_FILTERS.levels) ? 0 : 1) +
     (value.sponsorOnly ? 1 : 0) +
     (value.maxDays !== DEFAULT_FILTERS.maxDays ? 1 : 0) +
     (value.maxPostedDays !== DEFAULT_FILTERS.maxPostedDays ? 1 : 0) +

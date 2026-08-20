@@ -47,6 +47,8 @@ export default function App() {
   const [cv, setCv] = useState<CvProfile | null>(null)
   const [prefs, setPrefs] = useState<Prefs>(() => store.load())
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
+  /** Saved tab: one pipeline stage shown alone, or null for all of them. */
+  const [savedStage, setSavedStage] = useState<AppStatus | null>(null)
   const [view, setView] = useState<View>('discover')
   /**
    * How many results the Browse list has rendered. Putting all of them in the
@@ -96,6 +98,10 @@ export default function App() {
   )
   const onStatus = useCallback(
     (id: string, s: AppStatus) => setPrefs((p) => store.setStatus(p, id, s)),
+    []
+  )
+  const onOpen = useCallback(
+    (id: string, job?: Job) => setPrefs((p) => store.markOpened(p, id, job)),
     []
   )
   const onLike = useCallback(
@@ -252,6 +258,7 @@ export default function App() {
       onSave={onSave}
       onLike={onLike}
       onHide={onHide}
+      onOpen={onOpen}
       app={prefs.applications[item.job.id]}
       onStatus={onStatus}
       gone={gone}
@@ -377,11 +384,17 @@ export default function App() {
                 />
               ) : (
                 <>
-                  <Pipeline items={savedItems.map((s) => s.item)} apps={prefs.applications} />
+                  <Pipeline
+                    items={savedItems.map((s) => s.item)}
+                    apps={prefs.applications}
+                    active={savedStage}
+                    onSelect={setSavedStage}
+                  />
 
                   {/* Grouped so the things needing action are not buried under
                       the ones already closed. */}
                   {STATUSES.map((s) => {
+                    if (savedStage && s.value !== savedStage) return null
                     const group = savedItems.filter(
                       (it) => (prefs.applications[it.item.job.id]?.status ?? 'saved') === s.value
                     )
@@ -735,7 +748,18 @@ function HowItWorks() {
  * A count per stage, plus the one number that actually matters when you are
  * mid-hunt: how many applications are still waiting on a reply.
  */
-function Pipeline({ items, apps }: { items: Scored[]; apps: Record<string, Application> }) {
+function Pipeline({
+  items,
+  apps,
+  active,
+  onSelect,
+}: {
+  items: Scored[]
+  apps: Record<string, Application>
+  /** Stage currently being shown on its own, or null for all of them. */
+  active: AppStatus | null
+  onSelect: (s: AppStatus | null) => void
+}) {
   const counts = STATUSES.map((s) => ({
     ...s,
     n: items.filter((it) => (apps[it.job.id]?.status ?? 'saved') === s.value).length,
@@ -749,15 +773,42 @@ function Pipeline({ items, apps }: { items: Scored[]; apps: Record<string, Appli
   return (
     <div className="mt-4">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {counts.map((s) => (
-          <div key={s.value} className="rounded-xl border border-line/60 bg-abyss/50 px-3 py-2.5">
-            <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-dim">
-              <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-              {s.label}
-            </p>
-            <p className="mt-0.5 font-display text-lg font-bold text-chalk">{s.n}</p>
-          </div>
-        ))}
+        {counts.map((s) => {
+          const on = active === s.value
+          return (
+            <button
+              key={s.value}
+              type="button"
+              // Clicking the stage you are already on clears it, so the same
+              // control both narrows and restores without a separate reset.
+              onClick={() => onSelect(on ? null : s.value)}
+              disabled={s.n === 0 && !on}
+              aria-pressed={on}
+              title={
+                s.n === 0
+                  ? `Nothing at ${s.label.toLowerCase()} yet`
+                  : on
+                    ? 'Show every stage again'
+                    : `Show only ${s.label.toLowerCase()}`
+              }
+              className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                on
+                  ? 'border-beam/70 bg-beam/15'
+                  : 'border-line/60 bg-abyss/50 enabled:hover:border-haze enabled:hover:bg-abyss/80'
+              } disabled:cursor-not-allowed disabled:opacity-45`}
+            >
+              <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-dim">
+                <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                {s.label}
+              </p>
+              <p
+                className={`mt-0.5 font-display text-lg font-bold ${on ? 'text-ice' : 'text-chalk'}`}
+              >
+                {s.n}
+              </p>
+            </button>
+          )
+        })}
       </div>
 
       {waiting > 0 && (

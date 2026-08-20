@@ -110,6 +110,16 @@ export type Application = {
   at: string
   /** ISO date the application went in, kept across later status changes. */
   appliedAt?: string
+  /**
+   * ISO date the employer's listing was last opened from here.
+   *
+   * Set the moment "Open listing" is tapped, because that is the last thing
+   * that happens before you leave the site to fill in someone's form. Coming
+   * back with the application sent and then having to find the row again to
+   * mark it is how applications go unrecorded, so the tap records itself and
+   * the card stays flagged until you confirm what came of it.
+   */
+  openedAt?: string
   note?: string
   /**
    * The listing as it was when you saved it.

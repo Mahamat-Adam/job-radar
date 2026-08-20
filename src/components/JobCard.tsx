@@ -17,6 +17,8 @@ type Props = {
   onSave: (id: string, job?: Job) => void
   onLike: (id: string) => void
   onHide: (id: string) => void
+  /** Fired as the employer's listing is opened, before the tab leaves. */
+  onOpen: (id: string, job?: Job) => void
   /** Present only when the job is saved; drives the pipeline control. */
   app?: Application
   onStatus?: (id: string, s: AppStatus) => void
@@ -78,7 +80,20 @@ function MatchRing({ score }: { score: number }) {
   )
 }
 
-function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide, app, onStatus, gone }: Props) {
+function JobCardBase({
+  item,
+  saved,
+  liked,
+  hasCv,
+  isNew,
+  onSave,
+  onLike,
+  onHide,
+  onOpen,
+  app,
+  onStatus,
+  gone,
+}: Props) {
   const { job, overlap, reasons } = item
   const pay = salaryLabel(job)
   const tone = scoreTone(item.score)
@@ -87,8 +102,31 @@ function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide,
     ? job.countries.slice(0, 3).map((c) => ({ iso2: c, name: BY_ISO2[c]?.name ?? c }))
     : []
 
+  /*
+   * Three states, readable at a glance while scrolling.
+   *
+   *  green   the application went in, or has moved past that
+   *  amber   you opened the employer's listing and never said what happened,
+   *          so it is either waiting to be confirmed or was abandoned
+   *  normal  untouched
+   *
+   * Amber deliberately outranks nothing: it only shows while the question is
+   * still open, and answering it either way clears it.
+   */
+  const applied =
+    app?.status === 'applied' || app?.status === 'interviewing' || app?.status === 'offer'
+  const awaitingConfirmation = !applied && app?.status !== 'rejected' && !!app?.openedAt
+
+  const shell = applied
+    ? 'border-mint/50 bg-mint/[0.06] hover:border-mint/70'
+    : awaitingConfirmation
+      ? 'border-amber/50 bg-amber/[0.06] hover:border-amber/70'
+      : 'border-line/70 bg-abyss/55 hover:border-haze hover:bg-abyss/80'
+
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-line/70 bg-abyss/55 transition-all duration-200 hover:border-haze hover:bg-abyss/80">
+    <article
+      className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 ${shell}`}
+    >
       {/* Left accent encodes match strength without needing to read the number. */}
       <span
         aria-hidden
@@ -218,13 +256,36 @@ function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide,
             <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-dim">{job.summary}</p>
           )}
 
+          {/* The open question, answerable in one tap without hunting for the
+              status control. Left unanswered it simply stays, which is the
+              honest record of a listing you opened and did not apply to. */}
+          {awaitingConfirmation && onStatus && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-lg border border-amber/40 bg-amber/[0.07] px-2.5 py-2">
+              <span className="text-[11px] text-amber">
+                Opened {agoLabel(app.openedAt as string)} — did you apply?
+              </span>
+              <button
+                type="button"
+                onClick={() => onStatus(job.id, 'applied')}
+                className="rounded-md border border-amber/60 bg-amber/20 px-2 py-0.5 text-[11px] font-semibold text-amber transition-colors hover:bg-amber/30"
+              >
+                Yes, applied
+              </button>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="mt-3.5 flex items-center gap-1.5">
             <a
               href={job.url}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => openExternal(e, job.url)}
+              onClick={(e) => {
+                // Recorded before the tab leaves, so the job is already filed
+                // by the time you are looking at somebody's application form.
+                onOpen(job.id, job)
+                openExternal(e, job.url)
+              }}
               className="btn-primary !px-3 !py-1.5 !text-xs"
             >
               Open listing
