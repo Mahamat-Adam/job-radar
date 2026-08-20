@@ -102,7 +102,12 @@ function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide,
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
             <div className="min-w-0">
-              <h3 className="truncate text-[15px] font-semibold leading-snug text-chalk">
+              {/* Clamped rather than truncated. On a phone the column is ~320px
+                  and plenty of real titles run past 400px, so a single line cut
+                  "Staff Software Engineer - Customer Identity…" down to
+                  something you cannot judge. Two lines then an ellipsis keeps
+                  the card compact and still says what the job is. */}
+              <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-chalk">
                 {job.title}
               </h3>
               <p className="mt-0.5 truncate text-sm text-mist">{job.company}</p>

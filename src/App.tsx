@@ -292,7 +292,14 @@ export default function App() {
 
         {view === 'browse' && (
           <section className="pt-8">
-            <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+            {/* [&>*]:min-w-0 is load-bearing, the same way it is on the header
+                nav. A grid item defaults to min-width:auto, so the single mobile
+                column cannot shrink below its widest item's intrinsic minimum —
+                and a job title set with `truncate` is white-space:nowrap, whose
+                minimum is the entire untruncated line. One long title therefore
+                widened the column to 575px inside a 393px phone, dragging the
+                filter panel out with it and pushing the whole page sideways. */}
+            <div className="grid gap-6 [&>*]:min-w-0 lg:grid-cols-[300px_1fr]">
               <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-1 thin-scroll">
                 <div className="panel p-4">
                   <Filters
