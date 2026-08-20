@@ -50,6 +50,17 @@
 }
 
 @layer components {
+  /* Installed to an iOS home screen the app runs standalone, and the pairing of
+     viewport-fit=cover with a black-translucent status bar hands us the full
+     screen including the strip behind the clock and battery. Nothing reserves
+     that strip for us, so a sticky top-0 header draws straight through it.
+     Reserving it here rather than with a fixed height keeps every other context
+     untouched: env() resolves to 0 in Safari, on Android and on desktop, so this
+     collapses to no padding at all wherever there is no inset to avoid. */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
   .panel {
     @apply rounded-2xl border border-line/70 bg-abyss/60 backdrop-blur-sm;
   }

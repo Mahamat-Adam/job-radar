@@ -6,9 +6,12 @@ import { COUNTRIES } from '@/data/countries'
 export type FilterState = {
   query: string
   countries: string[]
-  /** Include postings with no fixed country. */
+  /** Include postings explicitly open to anywhere. */
   worldwide: boolean
+  /** Last confirmed still on the employer's board within this many days. */
   maxDays: number
+  /** First published by the employer within this many days. */
+  maxPostedDays: number
   remote: RemoteKind[]
   levels: Seniority[]
   sponsorOnly: boolean
@@ -20,6 +23,7 @@ export const DEFAULT_FILTERS: FilterState = {
   countries: [],
   worldwide: true,
   maxDays: 30,
+  maxPostedDays: 3650,
   remote: [],
   levels: [],
   sponsorOnly: false,
@@ -81,6 +85,7 @@ export default function Filters({ value, onChange, counts, total, showing }: Pro
     value.levels.length +
     (value.sponsorOnly ? 1 : 0) +
     (value.maxDays !== DEFAULT_FILTERS.maxDays ? 1 : 0) +
+    (value.maxPostedDays !== DEFAULT_FILTERS.maxPostedDays ? 1 : 0) +
     (value.query ? 1 : 0)
 
   return (
@@ -138,6 +143,28 @@ export default function Filters({ value, onChange, counts, total, showing }: Pro
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Posted date. Deliberately first and separate: it answers "is this new?",
+          which is the question the card's own "Posted 3 months ago" line invites,
+          and which the confirmed-live chips below cannot answer. */}
+      <div>
+        <p className="label">Posted within</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {RECENCY.map((r) => (
+            <button
+              key={r.days}
+              type="button"
+              onClick={() => set('maxPostedDays', r.days)}
+              className={`chip ${value.maxPostedDays === r.days ? 'chip-on' : 'hover:border-haze'}`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-dim">
+          When the employer first published the role. This is the date shown on each card.
+        </p>
       </div>
 
       {/* Recency */}

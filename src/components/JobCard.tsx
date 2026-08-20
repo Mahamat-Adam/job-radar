@@ -156,8 +156,12 @@ function JobCardBase({ item, saved, liked, hasCv, isNew, onSave, onLike, onHide,
                   {places.map((p) => p.name).join(' · ')}
                   {job.countries.length > 3 && ` +${job.countries.length - 3}`}
                 </span>
-              ) : (
+              ) : job.anywhere ? (
                 <span>Remote, anywhere</span>
+              ) : (
+                /* Country unresolved. The employer's own wording is honest;
+                   claiming "anywhere" for a listing that says "Hybrid" is not. */
+                <span className="truncate">{job.location}</span>
               )}
             </span>
             <span aria-hidden className="text-line">|</span>

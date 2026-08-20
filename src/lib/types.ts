@@ -13,8 +13,13 @@ export type Job = {
   id: string
   title: string
   company: string
-  /** ISO-2 codes. Empty means the posting is open worldwide. */
+  /**
+   * ISO-2 codes. Empty means the location could not be resolved to a country,
+   * which is NOT the same as being open to all of them — check `anywhere`.
+   */
   countries: string[]
+  /** True only when the posting itself says it is open anywhere. */
+  anywhere?: boolean
   /** Human location string exactly as the employer wrote it. */
   location: string
   remote: RemoteKind

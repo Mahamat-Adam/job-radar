@@ -121,9 +121,16 @@ const REGION_WORDS = {
   'southeast asia': ['SG', 'MY', 'PH', 'ID', 'TH', 'VN'],
 }
 
-/** Phrases meaning the role is open to anyone anywhere. */
+/**
+ * Phrases meaning the role is open to anyone anywhere.
+ *
+ * Strictly geographic. "Fully remote" and "100% remote" describe the working
+ * arrangement, not the hiring geography — "100% Remote (Europe*)" is remote and
+ * is emphatically not open worldwide. Those are toRemote()'s business; letting
+ * them in here put Europe-only roles in front of people on other continents.
+ */
 const ANYWHERE =
-  /\b(?:worldwide|world ?wide|anywhere|global(?:ly)?|any location|any country|fully remote|remote,? global|100% remote|location[- ]independent|work from anywhere)\b/i
+  /\b(?:worldwide|world ?wide|anywhere|global(?:ly)?|any location|any country|remote,? global|location[- ]independent|work from anywhere)\b/i
 
 const NAME_INDEX = (() => {
   const idx = []
@@ -180,6 +187,20 @@ function matchCodes(raw) {
   const out = []
   for (const [iso2, re] of Object.entries(CODES)) if (re.test(raw)) out.push(iso2)
   return out
+}
+
+/**
+ * True only when the text actually says the role is open anywhere.
+ *
+ * toCountries() has two exits that both return an empty array: one for a
+ * genuinely worldwide posting, one for a location string it could not resolve
+ * at all. Those mean opposite things, so emptiness alone cannot be read as
+ * "open to everyone" — a "Hybrid" or "N/A" location would qualify. This is the
+ * signal that separates the two, and it is stored on the record so the front
+ * end never has to guess.
+ */
+export function isAnywhere(locationText) {
+  return ANYWHERE.test(String(locationText ?? '').toLowerCase())
 }
 
 export function toCountries(locationText) {

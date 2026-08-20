@@ -9,6 +9,7 @@ import { extractSkills } from './lib/tags.mjs'
 import {
   cleanTitle,
   fingerprint,
+  isAnywhere,
   quality,
   summarize,
   toCountries,
@@ -142,13 +143,18 @@ function normalizeAll(raw, previousSeen) {
     }
 
     const id = fingerprint(r.company, title)
-    const countries = toCountries(`${r.location ?? ''} ${r.extra ?? ''}`)
+    const where = `${r.location ?? ''} ${r.extra ?? ''}`
+    const countries = toCountries(where)
 
     const job = {
       id,
       title,
       company: String(r.company ?? '').trim().slice(0, 90) || 'Unknown',
       countries,
+      // Only a posting that says so is open to everyone. Without this the front
+      // end reads an unresolved location as "worldwide" and shows a Hybrid role
+      // in Berlin to somebody who filtered to Canada.
+      anywhere: countries.length === 0 && isAnywhere(where),
       location: String(r.location ?? '').trim().slice(0, 120) || 'Worldwide',
       remote: toRemote(`${r.location ?? ''} ${title} ${description.slice(0, 900)}`, r.remoteHint),
       seniority: toSeniority(title, description),
@@ -263,7 +269,11 @@ async function main() {
       agedOut++
       continue
     }
-    jobs.push(j)
+    // A record written before `anywhere` existed carries an unresolved empty
+    // countries array that the old front end read as "open worldwide". Derive
+    // the flag from the location text we kept, so a carried listing is judged
+    // by the same rule as a freshly collected one.
+    jobs.push(j.anywhere === undefined ? { ...j, anywhere: isAnywhere(j.location) } : j)
     carried++
   }
 
@@ -278,7 +288,7 @@ async function main() {
   let worldwide = 0
   for (const j of jobs) {
     bySource[j.source] = (bySource[j.source] ?? 0) + 1
-    if (!j.countries.length) worldwide++
+    if (j.anywhere) worldwide++
     for (const c of j.countries) byCountry[c] = (byCountry[c] ?? 0) + 1
   }
 

@@ -126,16 +126,22 @@ export default function App() {
     const q = filters.query.trim().toLowerCase()
 
     let out = ranked.filter(({ job }) => {
-      if (daysAgo(freshness(job), now) > filters.maxDays) return false
+      /* daysAgo floors, so `>=` is what makes "24 hours" mean a day rather than
+         anything under 48. */
+      if (daysAgo(freshness(job), now) >= filters.maxDays) return false
+      if (daysAgo(job.posted, now) >= filters.maxPostedDays) return false
       if (filters.remote.length && !filters.remote.includes(job.remote)) return false
       if (filters.levels.length && !filters.levels.includes(job.seniority)) return false
       if (filters.sponsorOnly && !job.sponsor) return false
 
       if (filters.countries.length) {
         const hit = job.countries.some((c) => filters.countries.includes(c))
-        const openToAll = job.countries.length === 0 && filters.worldwide
+        /* Keyed off the posting's own words, never off an empty countries array:
+           that array is also empty when the location simply could not be parsed,
+           and those roles have a country, we just do not know which. */
+        const openToAll = job.anywhere === true && filters.worldwide
         if (!hit && !openToAll) return false
-      } else if (!filters.worldwide && job.countries.length === 0) {
+      } else if (!filters.worldwide && job.anywhere === true) {
         return false
       }
 
@@ -157,24 +163,40 @@ export default function App() {
   const globeCounts = useMemo(() => {
     const out: Record<string, number> = {}
     for (const { job } of ranked) {
-      if (daysAgo(freshness(job), now) > filters.maxDays) continue
+      if (daysAgo(freshness(job), now) >= filters.maxDays) continue
+      if (daysAgo(job.posted, now) >= filters.maxPostedDays) continue
       if (filters.remote.length && !filters.remote.includes(job.remote)) continue
       if (filters.levels.length && !filters.levels.includes(job.seniority)) continue
       if (filters.sponsorOnly && !job.sponsor) continue
       for (const c of job.countries) out[c] = (out[c] ?? 0) + 1
     }
     return out
-  }, [ranked, filters.maxDays, filters.remote, filters.levels, filters.sponsorOnly, now])
+  }, [
+    ranked,
+    filters.maxDays,
+    filters.maxPostedDays,
+    filters.remote,
+    filters.levels,
+    filters.sponsorOnly,
+    now,
+  ])
 
   /**
-   * Deliberately independent of the Browse filters. A daily selection that
-   * shifts because a country was ticked on another screen is not a daily
-   * selection. Only freshness is applied.
+   * Independent of the Browse filters, with one exception: the country, because
+   * the globe that sets it sits directly above these picks and tells you to tap
+   * a marker to filter. Ignoring it there made the control look broken. Every
+   * other filter still stays on Browse, so a daily selection does not quietly
+   * shift because a seniority box was ticked on another screen.
    */
   const picks = useMemo(() => {
-    const fresh = ranked.filter(({ job }) => daysAgo(freshness(job), now) <= 30)
+    const fresh = ranked.filter(({ job }) => {
+      if (daysAgo(freshness(job), now) > 30) return false
+      if (!filters.countries.length) return true
+      const hit = job.countries.some((c) => filters.countries.includes(c))
+      return hit || (job.anywhere === true && filters.worldwide)
+    })
     return dailyPicks(fresh, todayKey(), 6)
-  }, [ranked, now])
+  }, [ranked, now, filters.countries, filters.worldwide])
 
   /**
    * Saved jobs come from the live index where possible, and from the copy kept
@@ -237,7 +259,7 @@ export default function App() {
   )
 
   const worldwideCount = useMemo(
-    () => ranked.filter((s) => s.job.countries.length === 0).length,
+    () => ranked.filter((s) => s.job.anywhere === true).length,
     [ranked]
   )
 
@@ -431,7 +453,7 @@ function Header({
   savedCount: number
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line/50 bg-void/85 backdrop-blur-lg">
+    <header className="pt-safe sticky top-0 z-30 border-b border-line/50 bg-void/85 backdrop-blur-lg">
       <div className="mx-auto flex w-full max-w-[1240px] items-center gap-4 px-4 py-3 sm:px-6">
         <button
           type="button"
