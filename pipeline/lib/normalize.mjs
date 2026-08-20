@@ -431,13 +431,36 @@ export function toSalary(text) {
   // Reject obviously wrong reads such as a year range picked up as pay.
   if (min < 500 || max > 2_000_000) return undefined
 
-  const period = /per hour|\/\s*hour|hourly|\/hr/i.test(t)
+  /*
+   * The period is read from the text immediately after the figure, not from the
+   * whole description. Searching the entire blob turned a Monzo salary of
+   * "£121,600-164,600" into £121,600 per MONTH, on the strength of an unrelated
+   * sentence elsewhere on the page about a monthly budget. A number that wrong
+   * makes the whole salary field untrustworthy.
+   */
+  const near = t.slice(m.index, m.index + 80)
+  const period = /per hour|\/\s*hour|hourly|\/hr/i.test(near)
     ? 'hour'
-    : /per month|\/\s*month|monthly|\/mo/i.test(t)
+    : /per month|\/\s*month|monthly|\/mo/i.test(near)
       ? 'month'
       : 'year'
 
   return { min, max, currency, period }
+}
+
+/**
+ * Values an aggregator sends when it has no company name.
+ *
+ * Himalayas returns the literal string "name" for a good half of its rows, and
+ * because it is non-empty the usual `|| 'Unknown'` fallback never fired: 16
+ * live listings displayed their employer as "name", with the real one buried
+ * in the summary text.
+ */
+const PLACEHOLDER_COMPANY = /^(?:name|company|companyname|null|undefined|n\/?a|unknown|-|\.)$/i
+
+export function cleanCompany(value) {
+  const s = String(value ?? '').trim()
+  return !s || PLACEHOLDER_COMPANY.test(s) ? '' : s.slice(0, 90)
 }
 
 /* --------------------------------------------------------------- identity -- */

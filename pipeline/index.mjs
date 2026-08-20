@@ -7,6 +7,7 @@ import { atsBoards } from './sources/ats.mjs'
 import { SEARCH_QUERIES, isWanted, groupOf } from './roles.mjs'
 import { extractSkills } from './lib/tags.mjs'
 import {
+  cleanCompany,
   cleanTitle,
   fingerprint,
   isAnywhere,
@@ -191,7 +192,7 @@ function normalizeAll(raw, previousSeen) {
     const job = {
       id,
       title,
-      company: String(r.company ?? '').trim().slice(0, 90) || 'Unknown',
+      company: cleanCompany(r.company) || 'Unknown',
       countries,
       // Only a posting that says so is open to everyone. Without this the front
       // end reads an unresolved location as "worldwide" and shows a Hybrid role

@@ -134,7 +134,11 @@ export default function CvDrop({ cv, onCv, compact }: Props) {
           setOver(false)
           void handle(e.dataTransfer.files?.[0])
         }}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
+        /* focus-within, because the input this label wraps is sr-only: the base
+           focus ring was landing on a clipped 1×1px element while the 512×209
+           box people can actually see showed nothing at all. Tabbing to the
+           app's headline action moved nothing on screen. */
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all focus-within:ring-2 focus-within:ring-sky focus-within:ring-offset-2 focus-within:ring-offset-void ${
           over
             ? 'border-beam bg-beam/10'
             : 'border-line bg-abyss/40 hover:border-haze hover:bg-abyss/70'

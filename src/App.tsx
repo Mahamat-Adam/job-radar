@@ -61,11 +61,26 @@ export default function App() {
      stay stable for the whole session instead of clearing as you browse. */
   const [sinceVisit] = useState(() => store.load().lastVisit)
 
+  /** Bumped by "Try again", which is the only way to re-run the load. */
+  const [loadAttempt, setLoadAttempt] = useState(0)
+
   useEffect(() => {
+    let live = true
     loadIndex()
-      .then(setIndex)
-      .catch((e: Error) => setLoadError(e.message))
-  }, [])
+      .then((i) => live && setIndex(i))
+      .catch((e: Error) => live && setLoadError(e.message))
+    return () => {
+      live = false
+    }
+  }, [loadAttempt])
+
+  /* Tab switches land at the top of the new view. Scroll position used to
+     carry across, so tapping Today from four thousand pixels down a Browse
+     list opened Today four thousand pixels down as well — in the middle of a
+     FAQ panel rather than at the picks. */
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [view])
 
   useEffect(() => {
     store.save({ ...prefs, lastVisit: new Date().toISOString() })
@@ -285,7 +300,14 @@ export default function App() {
       <Header view={view} setView={setView} savedCount={prefs.saved.length} />
 
       <main className="mx-auto w-full max-w-[1240px] px-4 pb-24 sm:px-6">
-        {loadError && <LoadError message={loadError} />}
+        {loadError && (
+          <LoadError message={loadError} onRetry={() => {
+              // Cleared here rather than inside the effect, so the retry is an
+              // event doing one thing instead of a render cascade.
+              setLoadError(null)
+              setLoadAttempt((n) => n + 1)
+            }} />
+        )}
 
         {view === 'discover' && (
           <Discover
@@ -943,7 +965,7 @@ function Empty({ title, body }: { title: string; body: string }) {
   )
 }
 
-function LoadError({ message }: { message: string }) {
+function LoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="mt-6 flex items-start gap-3 rounded-xl border border-amber/40 bg-amber/10 p-4">
       <AlertCircle size={16} className="mt-0.5 shrink-0 text-amber" />
@@ -952,6 +974,10 @@ function LoadError({ message }: { message: string }) {
         <p className="mt-1 text-xs text-mist">
           {message}. The rest of the page still works, including the CV check.
         </p>
+        <button type="button" onClick={onRetry} className="btn-ghost mt-3 !px-3 !py-1.5 !text-xs">
+          <RefreshCw size={13} />
+          Try again
+        </button>
       </div>
     </div>
   )

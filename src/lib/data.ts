@@ -10,10 +10,24 @@ export type Index = { meta: IndexMeta; jobs: Job[] }
 const base = () => import.meta.env.BASE_URL
 
 export async function loadIndex(): Promise<Index> {
-  const res = await fetch(`${base()}data/jobs.json`, { cache: 'no-cache' })
+  /*
+   * A timeout, because on mobile data the normal failure is a request that
+   * hangs rather than one that fails. Without it the page sat on "Loading the
+   * index…" indefinitely with no error and no way back but a manual reload —
+   * and the service worker's cached copy was never reached either, since it
+   * only falls back when the fetch actually rejects.
+   */
+  const res = await fetch(`${base()}data/jobs.json`, {
+    cache: 'no-cache',
+    signal: AbortSignal.timeout(12_000),
+  })
   if (!res.ok) throw new Error(`Job index unavailable (${res.status})`)
   const data = (await res.json()) as Index
-  if (!Array.isArray(data.jobs)) throw new Error('Job index is malformed')
+  // Both halves are checked: reading meta off an index that only had `jobs`
+  // threw during render and left a blank white page rather than the error banner.
+  if (!Array.isArray(data.jobs) || !data.meta || typeof data.meta !== 'object') {
+    throw new Error('Job index is malformed')
+  }
   return data
 }
 

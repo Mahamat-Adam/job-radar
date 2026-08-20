@@ -14,6 +14,10 @@ export default {
         haze: '#254E8C',
         // Signal blues
         beam: '#3B82F6',
+        // Only for solid fills carrying white text. White on `beam` is 3.68:1,
+        // which fails AA for the 14px semibold the primary button uses; this is
+        // 6.70:1 and still unmistakably the same blue.
+        beamdeep: '#1D4ED8',
         sky: '#60A5FA',
         ice: '#A5CDFF',
         cyan: '#38D9E8',
@@ -25,7 +29,11 @@ export default {
         // Type
         chalk: '#EAF2FF',
         mist: '#9FB6D6',
-        dim: '#61789B',
+        // Raised from #61789B, which measured 4.13-4.41:1 against the panels it
+        // actually sits on and so failed AA everywhere — and it carries the whole
+        // secondary layer of every card: location, posted date, source, summary.
+        // This is 5.95:1 on the darkest panel and still reads below `mist`.
+        dim: '#7B93B9',
       },
       fontFamily: {
         display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],

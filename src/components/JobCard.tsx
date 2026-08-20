@@ -347,7 +347,14 @@ function JobCardBase({
               type="button"
               onClick={() => onHide(job.id)}
               title="Hide this one and show fewer like it"
-              className="ml-auto rounded-lg border border-transparent p-2 text-dim opacity-0 transition-all hover:border-line hover:text-mist focus-visible:opacity-100 group-hover:opacity-100"
+              aria-label="Hide this job and show fewer like it"
+              /* Revealed on hover, which on a touchscreen never happens — so the
+                 control stayed invisible while remaining fully tappable, sitting
+                 exactly where a thumb rests on the right of every card. One
+                 stray tap permanently hid a job and taught the ranker to show
+                 fewer like it, with no confirmation and no undo. On anything
+                 without hover it is simply always visible. */
+              className="ml-auto rounded-lg border border-transparent p-2 text-dim opacity-0 transition-all hover:border-line hover:text-mist focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-60"
             >
               <EyeOff size={14} />
             </button>

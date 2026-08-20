@@ -102,7 +102,8 @@ export const jobicy = {
         out.push({
           source: 'Jobicy',
           title: j.jobTitle,
-          company: j.companyName,
+          // companyName is literally "name" on many rows; the slug is correct.
+          company: j.companyName && j.companyName !== 'name' ? j.companyName : j.companySlug,
           location: j.jobGeo || 'Anywhere',
           remoteHint: true,
           url: j.url,

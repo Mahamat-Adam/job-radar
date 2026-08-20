@@ -26,6 +26,14 @@
     <link rel="icon" type="image/svg+xml" href="./icons/mark.svg" />
     <link rel="manifest" href="./manifest.webmanifest" />
 
+    <!--
+      The job list is the entire point of the page, and it was not requested
+      until index-*.js had downloaded, parsed and run: the first card appeared
+      around 7s on throttled mobile against a page that finished painting at
+      3.2s. Naming it here lets the browser start it immediately.
+    -->
+    <link rel="preload" href="./data/jobs.json" as="fetch" crossorigin />
+
   </head>
   <body>
     <div id="root"></div>

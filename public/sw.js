@@ -44,9 +44,16 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
 
   // Job data: always try the network, fall back to the last good copy.
+  //
+  // Raced against a timer, because a hanging request never rejects and so never
+  // reached the cached copy sitting right here — on mobile data a stall is the
+  // normal failure, and the page would wait on it forever.
   if (url.pathname.includes('/data/')) {
+    const stalled = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 8000)
+    )
     event.respondWith(
-      fetch(req)
+      Promise.race([fetch(req), stalled])
         .then((res) => {
           if (res.ok) {
             const copy = res.clone()
