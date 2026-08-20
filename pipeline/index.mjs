@@ -17,6 +17,7 @@ import {
   toRemote,
   toSalary,
   toSeniority,
+  relocationSignal,
   sponsorSignal,
 } from './lib/normalize.mjs'
 
@@ -219,6 +220,7 @@ function normalizeAll(raw, previousSeen) {
     const salary = toSalary(`${extra} ${description.slice(0, 2500)}`)
     if (salary) job.salary = salary
     if (sponsorSignal(haystack)) job.sponsor = true
+    if (relocationSignal(haystack)) job.relocation = true
 
     const existing = kept.get(id)
     if (!existing) {

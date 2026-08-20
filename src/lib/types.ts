@@ -51,8 +51,13 @@ export type Job = {
   tags: string[]
   /** Plain text, trimmed. Full text stays out of the index to keep it small. */
   summary: string
-  /** True when the employer appears on an official government sponsor register. */
+  /**
+   * The posting's own text mentions visa sponsorship. A keyword match on what
+   * the employer wrote, not a lookup against any government register.
+   */
   sponsor?: boolean
+  /** The posting offers relocation support, which is not visa sponsorship. */
+  relocation?: boolean
   /** 0-1. Low scores mean the listing looks reposted, undated, or thin. */
   quality: number
 }

@@ -496,11 +496,22 @@ const SPONSOR_YES = new RegExp(
     'h-?1b (?:sponsor|transfer|visa)',
     'employment pass',
     'work permit (?:provided|sponsored|support|sponsorship)',
-    'relocation (?:package|assistance|support|bonus|help)',
-    'we help(?: you)? relocate',
   ].join('|'),
   'i'
 )
+
+/**
+ * Relocation support, which is a different offer entirely.
+ *
+ * These used to sit in SPONSOR_YES. Of 22 badged listings checked against their
+ * live pages, 18 matched only on relocation wording and never said visa or
+ * sponsor anywhere — OpenAI offering to move someone to San Francisco is not an
+ * offer to sponsor a work visa, and for anyone applying from outside the country
+ * that distinction is the entire question. Kept as its own signal rather than
+ * dropped, because help with moving is still worth knowing about.
+ */
+const RELOCATION_YES =
+  /\b(?:relocation (?:package|assistance|support|bonus|help|allowance)|we help(?: you)? relocate|relocation is (?:available|offered|provided))\b/i
 
 /** The employer ruling it out, which must win over any nearby positive. */
 const SPONSOR_NO =
@@ -516,6 +527,11 @@ export function sponsorSignal(text) {
   if (!t) return false
   if (SPONSOR_NO.test(t)) return false
   return SPONSOR_YES.test(t)
+}
+
+/** True when the posting offers help with moving, which is not the same thing. */
+export function relocationSignal(text) {
+  return RELOCATION_YES.test(String(text ?? ''))
 }
 
 /* ---------------------------------------------------------------- quality -- */

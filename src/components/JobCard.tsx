@@ -192,10 +192,21 @@ function JobCardBase({
             {job.sponsor && (
               <span
                 className="chip border-amber/40 bg-amber/10 text-amber"
-                title="This posting explicitly mentions visa sponsorship or relocation support"
+                title="This posting's own text mentions visa sponsorship. It is a keyword match on what the employer wrote, so confirm it on the listing."
               >
                 <ShieldCheck size={12} />
                 Mentions sponsorship
+              </span>
+            )}
+
+            {/* Separate from sponsorship on purpose: an employer paying to move
+                you across a city is not offering to sponsor a work visa. */}
+            {job.relocation && !job.sponsor && (
+              <span
+                className="chip border-cyan/30 text-cyan"
+                title="This posting mentions relocation support. That is help with moving, not a work visa."
+              >
+                Relocation support
               </span>
             )}
 

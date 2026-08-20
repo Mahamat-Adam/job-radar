@@ -111,9 +111,25 @@ function skillScore(cvSkills: Set<string>, jobTags: string[]): { s: number; hit:
       miss.push(tag)
     }
   }
-  // Square-root so a job listing 12 technologies is not automatically a worse
-  // match than one listing 3, purely for being descriptive.
-  return { s: total > 0 ? Math.sqrt(got / total) : 0, hit, miss }
+  /*
+   * Coverage alone made rarity meaningless.
+   *
+   * The weights sat in both the numerator and the denominator, so they could
+   * only ever break ties within one listing's own tags — a job asking for CI/CD
+   * and Docker and nothing else scored a perfect 1.00, above a job matching
+   * TypeScript, React, Node and Python out of seven. Everybody's git + HTML +
+   * CSS outranked the stack you are actually hired for.
+   *
+   * Half the score is still coverage, with the square root keeping a listing
+   * that names twelve technologies from being punished for being descriptive.
+   * The other half is the absolute weight matched, which is what makes a rare
+   * skill worth more than a common one. Saturating at a few weight units stops
+   * a long listing from running away with it.
+   */
+  const SATURATION = 3.5
+  const coverage = total > 0 ? Math.sqrt(got / total) : 0
+  const depth = Math.min(1, got / SATURATION)
+  return { s: total > 0 ? 0.5 * coverage + 0.5 * depth : 0, hit, miss }
 }
 
 const STOP = new Set([
@@ -145,7 +161,22 @@ function titleScore(cvTitles: string[], jobTitle: string): number {
     const ct = tokens(t)
     if (!ct.length) continue
     const shared = ct.filter((w) => jt.has(w)).length
-    best = Math.max(best, shared / Math.max(ct.length, jt.size))
+    if (!shared) continue
+    /*
+     * Containment, not symmetric overlap.
+     *
+     * Dividing by the longer of the two meant every descriptive word the
+     * employer added cost you: "Software Engineer" scored 1.00 while "Graduate
+     * Software Engineer (2026 Intake)" — a posting written for exactly this
+     * candidate — scored 0.40. Of 876 listings whose titles fully contain
+     * "software engineer", only 24 scored full marks.
+     *
+     * What matters is whether your title is inside theirs. The damper still
+     * prefers a close title over one buried in qualifiers, but gently.
+     */
+    const containment = shared / ct.length
+    const extra = Math.max(0, jt.size - shared)
+    best = Math.max(best, containment * (1 - 0.15 * (extra / jt.size)))
   }
   return best
 }
@@ -213,7 +244,7 @@ export function scoreJob(job: Job, cv: CvProfile | null, prefs: Prefs, now: numb
   else if (hit.length) reasons.push(`${hit.length} skill${hit.length > 1 ? 's' : ''} in common`)
   if (title > 0.5) reasons.push('title matches your experience')
   if (job.seniority === cv.seniority) reasons.push('right level for you')
-  if (job.sponsor) reasons.push('employer sponsors visas')
+  if (job.sponsor) reasons.push('posting mentions visa sponsorship')
   const days = (now - Date.parse(job.posted)) / 86_400_000
   if (days <= 2) reasons.push('posted in the last 48 hours')
 
