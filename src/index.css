@@ -65,9 +65,13 @@
     @apply rounded-2xl border border-line/70 bg-abyss/60 backdrop-blur-sm;
   }
 
+  /* min-h on coarse pointers only: every control here was under the 44px
+     guideline — the primary "Open listing" was a 28px strip — and on a phone
+     that is a miss, not a tap. The visual size is unchanged on a mouse. */
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-line/80 bg-deep/60 px-2.5 py-1
-           text-xs font-medium text-mist transition-colors;
+           text-xs font-medium text-mist transition-colors
+           [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:px-3;
   }
 
   .chip-on {
@@ -76,7 +80,8 @@
 
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
-           transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45;
+           transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45
+           [@media(pointer:coarse)]:min-h-[44px];
   }
 
   .btn-primary {

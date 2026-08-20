@@ -12,6 +12,7 @@ import {
   Download,
   RefreshCw,
   Search,
+  SlidersHorizontal,
   Sparkles,
   Upload,
 } from 'lucide-react'
@@ -59,6 +60,8 @@ export default function App() {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   /** Saved tab: one pipeline stage shown alone, or null for all of them. */
   const [savedStage, setSavedStage] = useState<AppStatus | null>(null)
+  /** Browse filter panel on a phone. Always open from lg up, where it is a column. */
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [view, setView] = useState<View>('discover')
   /**
    * How many results the Browse list has rendered. Putting all of them in the
@@ -348,7 +351,32 @@ export default function App() {
                 filter panel out with it and pushing the whole page sideways. */}
             <div className="grid gap-6 [&>*]:min-w-0 lg:grid-cols-[300px_1fr]">
               <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-1 thin-scroll">
-                <div className="panel p-4">
+                {/* Closed by default on a phone. Left open, the panel is 72
+                    controls and about 1,200px tall, so the first job sat two
+                    full screenfuls down on every visit — and a swipe that began
+                    inside the country list scrolled that list instead of the
+                    page, which reads as the page being stuck. It is always open
+                    from lg up, where it is a sticky column with room of its own. */}
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen((o) => !o)}
+                  aria-expanded={filtersOpen}
+                  aria-controls="filter-panel"
+                  className="btn-ghost mb-3 flex w-full items-center justify-between lg:hidden"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <SlidersHorizontal size={15} />
+                    Filters
+                  </span>
+                  <span className="text-xs font-normal text-dim">
+                    {filtered.length.toLocaleString()} of {jobs.length.toLocaleString()}
+                  </span>
+                </button>
+
+                <div
+                  id="filter-panel"
+                  className={`panel p-4 ${filtersOpen ? '' : 'hidden'} lg:block`}
+                >
                   <Filters
                     value={filters}
                     onChange={setFilters}
@@ -538,7 +566,7 @@ function Header({
               key={id}
               type="button"
               onClick={() => setView(id)}
-              className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+              className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors [@media(pointer:coarse)]:min-h-[44px] ${
                 view === id ? 'bg-beam/15 text-ice' : 'text-mist hover:bg-deep/60 hover:text-chalk'
               }`}
             >

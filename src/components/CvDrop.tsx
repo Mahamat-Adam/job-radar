@@ -19,6 +19,15 @@ const SENIORITY_TEXT: Record<string, string> = {
   unknown: 'level unclear',
 }
 
+let warmed = false
+/** Pulls the CV parsing chunks into cache, once, without blocking anything. */
+function warmParsers() {
+  if (warmed) return
+  warmed = true
+  void import('pdfjs-dist').catch(() => {})
+  void import('mammoth').catch(() => {})
+}
+
 export default function CvDrop({ cv, onCv, compact }: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -128,6 +137,13 @@ export default function CvDrop({ cv, onCv, compact }: Props) {
           e.preventDefault()
           setOver(true)
         }}
+        /* Warm the parser as the pointer arrives rather than when the file
+           lands. pdf.js is a 316KB chunk plus a worker, and downloading it only
+           once a CV was dropped meant about four seconds of apparent nothing at
+           the single moment the whole app exists for. Deliberately not on page
+           load: the point is to overlap that download with the file picker,
+           not with first paint. */
+        onPointerEnter={warmParsers}
         onDragLeave={() => setOver(false)}
         onDrop={(e) => {
           e.preventDefault()

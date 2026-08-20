@@ -151,7 +151,7 @@ export default function Filters({ value, onChange, counts, total, showing }: Pro
               key={v}
               type="button"
               onClick={() => set('sort', v)}
-              className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors [@media(pointer:coarse)]:min-h-[44px] ${
                 value.sort === v
                   ? 'border-beam/70 bg-beam/15 text-ice'
                   : 'border-line bg-deep/40 text-mist hover:border-haze'
@@ -306,7 +306,7 @@ export default function Filters({ value, onChange, counts, total, showing }: Pro
                 key={c.iso2}
                 type="button"
                 onClick={() => set('countries', toggleIn(value.countries, c.iso2))}
-                className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition-colors ${
+                className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition-colors [@media(pointer:coarse)]:min-h-[44px] ${
                   on ? 'bg-beam/15 text-ice' : 'text-mist hover:bg-deep/60'
                 }`}
               >

@@ -320,7 +320,7 @@ function JobCardBase({
               onClick={() => onSave(job.id, job)}
               aria-pressed={saved}
               title={saved ? 'Remove from saved' : 'Save this job'}
-              className={`rounded-lg border p-2 transition-colors ${
+              className={`rounded-lg border p-2 transition-colors [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px] ${
                 saved
                   ? 'border-amber/50 bg-amber/15 text-amber'
                   : 'border-line text-dim hover:border-haze hover:text-mist'
@@ -334,7 +334,7 @@ function JobCardBase({
               onClick={() => onLike(job.id)}
               aria-pressed={liked}
               title={liked ? 'Stop favouring this kind of job' : 'Show me more like this'}
-              className={`rounded-lg border p-2 transition-colors ${
+              className={`rounded-lg border p-2 transition-colors [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px] ${
                 liked
                   ? 'border-rose/50 bg-rose/15 text-rose'
                   : 'border-line text-dim hover:border-haze hover:text-mist'
@@ -354,7 +354,7 @@ function JobCardBase({
                  stray tap permanently hid a job and taught the ranker to show
                  fewer like it, with no confirmation and no undo. On anything
                  without hover it is simply always visible. */
-              className="ml-auto rounded-lg border border-transparent p-2 text-dim opacity-0 transition-all hover:border-line hover:text-mist focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-60"
+              className="ml-auto rounded-lg border border-transparent p-2 [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px] text-dim opacity-0 transition-all hover:border-line hover:text-mist focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-60"
             >
               <EyeOff size={14} />
             </button>
