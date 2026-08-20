@@ -151,7 +151,7 @@ export default function Filters({ value, onChange, counts, total, showing }: Pro
               key={v}
               type="button"
               onClick={() => set('sort', v)}
-              className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors [@media(pointer:coarse)]:min-h-[44px] ${
+              className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors [@media(pointer:coarse)]:min-h-[44px] ${
                 value.sort === v
                   ? 'border-beam/70 bg-beam/15 text-ice'
                   : 'border-line bg-deep/40 text-mist hover:border-haze'

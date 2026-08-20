@@ -552,26 +552,38 @@ function Header({
             <Globe2 size={17} className="text-sky" />
             <span className="absolute inset-0 animate-pulse-ring rounded-lg border border-beam/50" />
           </span>
-          <span className="font-display text-base font-bold tracking-tight text-chalk">
+          {/* The wordmark is the first thing to go on a 320px screen: with it
+              the fourth tab is clipped, and a reachable feature is worth more
+              than a name repeated next to its own logo. */}
+          <span className="hidden font-display text-base font-bold tracking-tight text-chalk min-[360px]:inline">
             Job Radar
           </span>
         </button>
 
         {/* min-w-0 is load-bearing: a flex item defaults to min-width:auto, so
             without it the nav refuses to shrink below its content and widens
-            the whole page on a phone instead of scrolling inside itself. */}
+            the whole page on a phone instead of scrolling inside itself.
+
+            Labels are hidden below sm because the four of them did not fit:
+            the strip scrolled, with no visual sign that it did, so "Saved" was
+            cut in half and "CV check" was off screen entirely at every iPhone
+            width — a whole feature nobody could find. Icons fit without
+            scrolling, and each button keeps its name for screen readers. */}
         <nav className="thin-scroll ml-auto flex min-w-0 items-center gap-1 overflow-x-auto">
           {NAV.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
               onClick={() => setView(id)}
-              className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors [@media(pointer:coarse)]:min-h-[44px] ${
+              aria-label={label}
+              aria-current={view === id ? 'page' : undefined}
+              title={label}
+              className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px] [@media(pointer:coarse)]:justify-center ${
                 view === id ? 'bg-beam/15 text-ice' : 'text-mist hover:bg-deep/60 hover:text-chalk'
               }`}
             >
               <Icon size={14} />
-              {label}
+              <span className="hidden sm:inline">{label}</span>
               {id === 'saved' && savedCount > 0 && (
                 <span className="ml-0.5 rounded-full bg-amber/25 px-1.5 text-[10px] font-semibold text-amber">
                   {savedCount}

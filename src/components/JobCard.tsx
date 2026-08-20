@@ -264,7 +264,7 @@ function JobCardBase({
               {overlap.slice(0, 8).map((id) => (
                 <span
                   key={id}
-                  className="rounded-md bg-beam/15 px-1.5 py-0.5 text-[11px] font-medium text-ice"
+                  className="rounded-md bg-beam/15 px-1.5 py-0.5 text-[11px] font-semibold text-ice"
                 >
                   {labelOf(id)}
                 </span>

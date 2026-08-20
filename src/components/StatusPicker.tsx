@@ -47,7 +47,7 @@ export default function StatusPicker({
               type="button"
               onClick={() => onChange(s.value)}
               aria-pressed={on}
-              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
                 on ? s.tone : 'border-line/70 text-dim hover:border-haze hover:text-mist'
               }`}
             >

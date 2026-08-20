@@ -56,7 +56,7 @@ export default function CvDrop({ cv, onCv, compact }: Props) {
       <div className="flex items-center gap-3 rounded-xl border border-line/70 bg-abyss/60 px-3 py-2.5">
         <FileText size={16} className="shrink-0 text-sky" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-chalk">{cv.fileName}</p>
+          <p className="truncate text-xs font-semibold text-chalk">{cv.fileName}</p>
           <p className="text-[11px] text-dim">
             {cv.skills.length} skills · {SENIORITY_TEXT[cv.seniority]}
           </p>

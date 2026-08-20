@@ -532,7 +532,7 @@ export default function Globe({ counts, selected, onSelect, className }: GlobePr
         style={{ visibility: hoverCountry ? 'visible' : 'hidden' }}
       >
         <div className="-translate-x-1/2 -translate-y-[150%] whitespace-nowrap rounded-lg border border-line bg-abyss/95 px-2.5 py-1.5 text-xs shadow-lg backdrop-blur">
-          <span className="font-medium text-chalk">{hoverCountry?.name}</span>
+          <span className="font-semibold text-chalk">{hoverCountry?.name}</span>
           <span className="ml-2 font-mono text-cyan">{hover ? (counts[hover] ?? 0) : 0}</span>
         </div>
       </div>

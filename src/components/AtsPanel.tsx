@@ -71,7 +71,7 @@ export default function AtsPanel({ cv, target }: { cv: CvProfile; target?: Job |
           <div key={c.id} className="flex gap-3 px-6 py-3.5">
             <span className="mt-0.5 shrink-0">{ICON[c.verdict]}</span>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-chalk">
+              <p className="text-sm font-semibold text-chalk">
                 {c.label}
                 {c.verdict === 'tip' && (
                   <span className="ml-2 rounded bg-deep px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-dim">
