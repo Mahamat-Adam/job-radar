@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState, type ReactElement } from 'react'
 import {
   AlertCircle,
   Bookmark,
@@ -15,7 +15,17 @@ import {
   Sparkles,
   Upload,
 } from 'lucide-react'
-import Globe from '@/three/Globe'
+/*
+ * Three.js is 120 KB gzipped and was a static import, which put it on the
+ * render-blocking path: on throttled mobile the page showed nothing at all for
+ * 3.2s while it downloaded. The globe is not what the first paint is for — at
+ * 390px only its top ~216px is above the fold — so it loads on its own and the
+ * page paints without it. The placeholder is the same aspect-square box, so
+ * nothing moves when it arrives.
+ */
+const Globe = lazy(() => import('@/three/Globe'))
+
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import JobCard from '@/components/JobCard'
 import CvDrop from '@/components/CvDrop'
 import AtsPanel from '@/components/AtsPanel'
@@ -629,12 +639,20 @@ function Discover({
             fills the right-hand column across both rows on a wide screen. */}
         <div className="relative order-2 min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-beam/10 blur-3xl" />
-          <Globe
-            counts={counts}
-            selected={selected}
-            onSelect={onCountry}
-            className="mx-auto aspect-square w-full max-w-[520px]"
-          />
+          {/* Boundary as well as Suspense: a chunk that fails to download throws
+              during render, and without this the whole page unmounted to a blank
+              document. The globe is decoration — losing it should cost the globe
+              and nothing else, since every country is also in the Browse filter. */}
+          <ErrorBoundary label="globe" fallback={<GlobePlaceholder />}>
+            <Suspense fallback={<GlobePlaceholder />}>
+              <Globe
+                counts={counts}
+                selected={selected}
+                onSelect={onCountry}
+                className="mx-auto aspect-square w-full max-w-[520px]"
+              />
+            </Suspense>
+          </ErrorBoundary>
           <div className="mt-2 grid grid-cols-3 gap-3 text-center">
             <Stat value={total} label="openings" ready={ready} />
             <Stat value={countryCount} label="countries" ready={ready} />
@@ -962,6 +980,16 @@ function Empty({ title, body }: { title: string; body: string }) {
       <p className="font-display text-base font-semibold text-chalk">{title}</p>
       <p className="mx-auto mt-1.5 max-w-md text-sm text-mist">{body}</p>
     </div>
+  )
+}
+
+/** Same box the globe occupies, so nothing shifts when it arrives or fails. */
+function GlobePlaceholder() {
+  return (
+    <div
+      aria-hidden
+      className="mx-auto aspect-square w-full max-w-[520px] rounded-full border border-line/40 bg-abyss/30"
+    />
   )
 }
 

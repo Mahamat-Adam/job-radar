@@ -86,6 +86,8 @@ export default function Globe({ counts, selected, onSelect, className }: GlobePr
     moved: 0,
     pointer: { x: -9999, y: -9999, inside: false },
     hoverIso: null as string | null,
+    /** A finger needs a wider hit radius than a cursor. */
+    coarse: false,
   })
   api.current.counts = counts
   api.current.selected = selected
@@ -280,6 +282,13 @@ export default function Globe({ counts, selected, onSelect, className }: GlobePr
     const dom = renderer.domElement
 
     const onDown = (e: PointerEvent) => {
+      const rect = dom.getBoundingClientRect()
+      // Seeded here because a tap produces no pointermove at all, and without a
+      // position there is nothing for the release to test against.
+      api.current.pointer.x = e.clientX - rect.left
+      api.current.pointer.y = e.clientY - rect.top
+      api.current.pointer.inside = true
+      api.current.coarse = e.pointerType !== 'mouse'
       api.current.dragging = true
       api.current.moved = 0
       api.current.lastX = e.clientX
@@ -308,9 +317,13 @@ export default function Globe({ counts, selected, onSelect, className }: GlobePr
       api.current.tilt = THREE.MathUtils.clamp(api.current.tilt + dy * 0.003, -0.9, 0.9)
     }
     const onUp = (e: PointerEvent) => {
-      // A short press with almost no travel is a click, not a drag.
-      if (api.current.dragging && api.current.moved < 6 && api.current.hoverIso) {
-        api.current.onSelect(api.current.hoverIso)
+      // A short press with almost no travel is a click, not a drag. The marker
+      // is looked up from where the finger actually lifted rather than from a
+      // hover the loop was never allowed to compute.
+      if (api.current.dragging && api.current.moved < 8) {
+        const rect = dom.getBoundingClientRect()
+        const hit = nearestMarker(e.clientX - rect.left, e.clientY - rect.top)
+        if (hit) api.current.onSelect(hit.iso2)
       }
       api.current.dragging = false
       dom.style.cursor = 'grab'
@@ -349,16 +362,67 @@ export default function Globe({ counts, selected, onSelect, className }: GlobePr
     /* -------------------------------------------------------------- loop --- */
     const clock = new THREE.Clock()
     const screen = new THREE.Vector3()
-    const camDir = new THREE.Vector3()
-    let visible = true
+    /*
+     * The loop used to run for the whole session. On the Today tab the globe is
+     * near the top and the picks are below it, so reading job cards kept a WebGL
+     * scene re-rendering off screen at roughly a fifth of the main thread — and
+     * on a phone that is battery and scroll smoothness for nothing.
+     */
+    let onScreen = true
+    let shown = !document.hidden
+    const isVisible = () => onScreen && shown
+
     const onVis = () => {
-      visible = !document.hidden
+      shown = !document.hidden
     }
     document.addEventListener('visibilitychange', onVis)
 
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting
+      },
+      { rootMargin: '120px' }
+    )
+    io.observe(renderer.domElement)
+
+    /**
+     * The marker nearest a point on screen, or null.
+     *
+     * Pulled out of the render loop so a tap can ask the same question the
+     * hover does. It used to exist only inside the loop, and the loop refuses
+     * to run it while a pointer is down — so on press the hover was cleared,
+     * and by the time the release checked for one there was nothing there.
+     * That made "tap a marker to filter" dead on touch, and on a mouse unless
+     * press and release landed inside the same frame.
+     */
+    let lastStateKey = ''
+
+    const nearestMarker = (px: number, py: number) => {
+      const w = renderer.domElement.clientWidth
+      const h = renderer.domElement.clientHeight
+      let found: { iso2: string; d: number; x: number; y: number } | null = null
+
+      for (const m of markers) {
+        screen.copy(m.base).applyMatrix4(world.matrixWorld)
+        // Facing away from the camera means it is behind the globe.
+        const toCam = screen.clone().sub(camera.position).normalize()
+        const normal = screen.clone().normalize()
+        if (normal.dot(toCam) > -0.12) continue
+
+        screen.project(camera)
+        const sx = (screen.x * 0.5 + 0.5) * w
+        const sy = (-screen.y * 0.5 + 0.5) * h
+        const d = Math.hypot(sx - px, sy - py)
+        // A finger is far blunter than a cursor, so touch gets a wider reach.
+        const reach = api.current.coarse ? 40 : 26
+        if (d < reach && (!found || d < found.d)) found = { iso2: m.iso2, d, x: sx, y: sy }
+      }
+      return found
+    }
+
     const tick = () => {
       raf = requestAnimationFrame(tick)
-      if (!visible) return
+      if (!isVisible()) return
 
       const dt = Math.min(clock.getDelta(), 0.1)
 
@@ -370,40 +434,28 @@ export default function Globe({ counts, selected, onSelect, className }: GlobePr
       world.rotation.y = api.current.spin
       world.rotation.z = api.current.tilt
 
-      /* Marker states are cheap enough to refresh every frame, which keeps
-         selection feeling instant without any diffing. */
+      /* Rewritten only when something changed. Setting three material values on
+         every marker every frame was pure cost once the country list grew. */
       const sel = api.current.selected
       const hoveredNow = api.current.hoverIso
-      for (const m of markers) {
-        const isSel = sel.includes(m.iso2)
-        const isHov = m.iso2 === hoveredNow
-        m.dot.material.color.set(isSel ? 0xf6a723 : isHov ? 0xffffff : 0xa5cdff)
-        m.ring.material.color.set(isSel ? 0xf6a723 : 0x38d9e8)
-        m.ring.material.opacity = isSel ? 0.45 : isHov ? 0.38 : 0.22
+      const stateKey = `${hoveredNow ?? ''}|${sel.join(',')}`
+      if (stateKey !== lastStateKey) {
+        lastStateKey = stateKey
+        for (const m of markers) {
+          const isSel = sel.includes(m.iso2)
+          const isHov = m.iso2 === hoveredNow
+          m.dot.material.color.set(isSel ? 0xf6a723 : isHov ? 0xffffff : 0xa5cdff)
+          m.ring.material.color.set(isSel ? 0xf6a723 : 0x38d9e8)
+          m.ring.material.opacity = isSel ? 0.45 : isHov ? 0.38 : 0.22
+        }
       }
 
       /* Hover by screen projection rather than raycasting. Sprites ignore
          depth here, so this also has to reject markers on the far side. */
-      let best: { iso2: string; d: number; x: number; y: number } | null = null
-      if (api.current.pointer.inside && !api.current.dragging) {
-        const w = renderer.domElement.clientWidth
-        const h = renderer.domElement.clientHeight
-        camera.getWorldDirection(camDir)
-
-        for (const m of markers) {
-          screen.copy(m.base).applyMatrix4(world.matrixWorld)
-          // Facing away from the camera means it is behind the globe.
-          const toCam = screen.clone().sub(camera.position).normalize()
-          const normal = screen.clone().normalize()
-          if (normal.dot(toCam) > -0.12) continue
-
-          screen.project(camera)
-          const sx = (screen.x * 0.5 + 0.5) * w
-          const sy = (-screen.y * 0.5 + 0.5) * h
-          const d = Math.hypot(sx - api.current.pointer.x, sy - api.current.pointer.y)
-          if (d < 26 && (!best || d < best.d)) best = { iso2: m.iso2, d, x: sx, y: sy }
-        }
-      }
+      const best =
+        api.current.pointer.inside && !api.current.dragging
+          ? nearestMarker(api.current.pointer.x, api.current.pointer.y)
+          : null
 
       const nextIso = best?.iso2 ?? null
       if (nextIso !== api.current.hoverIso) {
@@ -426,6 +478,7 @@ export default function Globe({ counts, selected, onSelect, className }: GlobePr
       rebuildRef.current = null
       cancelAnimationFrame(raf)
       ro.disconnect()
+      io.disconnect()
       document.removeEventListener('visibilitychange', onVis)
       dom.removeEventListener('pointerdown', onDown)
       dom.removeEventListener('pointermove', onMove)

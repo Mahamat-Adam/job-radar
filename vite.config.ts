@@ -20,9 +20,9 @@ export default defineConfig(() => ({
   preview: { port: 5211, strictPort: true },
   build: {
     // pdf.js and mammoth are dynamically imported and split out on their own,
-    // so a visitor who never uploads a CV never downloads either. three is a
-    // static import because the globe is above the fold, but it is worth its
-    // own chunk so it can be cached separately from the app code.
+    // so a visitor who never uploads a CV never downloads either. three is now
+    // dynamic too — the globe loads after first paint rather than blocking it —
+    // and keeping it in its own chunk lets it cache separately from app code.
     rollupOptions: {
       output: {
         manualChunks: (id: string) => (id.includes('node_modules/three') ? 'three' : undefined),
